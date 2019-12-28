@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Siderbar from "./components/Siderbar";
 import axios from 'axios';
 import './App.css';
 
@@ -26,10 +27,11 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <h1>{ this.state.message }</h1>
+        <Siderbar>Test Sidebar</Siderbar>
+        {/* <h1>{ this.state.message }</h1>
         <button onClick={this.fetchData} >
           Fetch Data
-        </button>        
+        </button>         */}
       </div>
     );
   }
