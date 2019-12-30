@@ -16,7 +16,8 @@ CREATE TABLE videos (
   id SERIAL PRIMARY KEY NOT NULL,
   name VARCHAR(255) NOT NULL,
   duration INTEGER NOT NULL,
-  started_at SMALLINT NOT NULL, 
+  uploaded_at TIMESTAMP,
+  started_at TIMESTAMP, 
   is_analyzed BOOLEAN DEFAULT FALSE,
   s3_url VARCHAR(255),
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
