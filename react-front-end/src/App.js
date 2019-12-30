@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
-import Siderbar from "./components/Siderbar";
 import axios from 'axios';
 import './App.css';
+import ReactDOM from 'react-dom';
+import Button from '@material-ui/core/Button'
+import VerticalTabs from './components/Siderbar';
+import { Dashboard } from './components/Dashboard';
 
 class App extends Component {
   constructor(props) {
@@ -26,13 +29,10 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
-        <Siderbar>Test Sidebar</Siderbar>
-        {/* <h1>{ this.state.message }</h1>
-        <button onClick={this.fetchData} >
-          Fetch Data
-        </button>         */}
-      </div>
+      <>
+        <VerticalTabs/>
+        <Dashboard/>
+      </>
     );
   }
 }

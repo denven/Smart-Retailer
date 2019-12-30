@@ -1,64 +1,55 @@
 import React from 'react';
-// import ReactDOM from 'react-dom';
-import 'antd/dist/antd.css';
-import '../styles/Siderbar.css';
-import { Layout, Menu, Icon } from 'antd';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+import { makeStyles } from '@material-ui/core/styles';
 
-const { Header, Sider, Content } = Layout;
-
-class Siderbar extends React.Component {
-  state = {
-    collapsed: false,
-  };
-
-  toggle = () => {
-    this.setState({
-      collapsed: !this.state.collapsed,
-    });
-  };
-
-  render() {
-    return (
-      <Layout>
-        <Sider trigger={null} collapsible collapsed={this.state.collapsed}>
-          <div className="logo"/>
-          <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']}>
-            <Menu.Item key="1">
-              <Icon type="user" />
-              <span>Dashboard</span>
-            </Menu.Item>
-            <Menu.Item key="2">
-              <Icon type="video-camera" />
-              <span>Statistics</span>
-            </Menu.Item>
-            <Menu.Item key="3">
-              <Icon type="upload" />
-              <span>Settings</span>
-            </Menu.Item>
-          </Menu>
-        </Sider>
-        <Layout>
-          <Header style={{ background: '#fff', padding: 0 }}>
-            <Icon
-              className="trigger"
-              type={this.state.collapsed ? 'menu-unfold' : 'menu-fold'}
-              onClick={this.toggle}
-            />
-          </Header>
-          <Content
-            style={{
-              margin: '24px 16px',
-              padding: 24,
-              background: '#fff',
-              minHeight: 280,
-            }}
-          >
-            Content
-          </Content>
-        </Layout>
-      </Layout>
-    );
+const useStyles = makeStyles(theme => ({
+  root: {
+    flexGrow: 1,
+    backgroundColor: theme.palette.background.paper,
+    display: 'flex',
+  },
+  tabs: {
+    borderRight: `2px solid ${theme.palette.divider}`,
+    height: 1150
+  },
+  logo: {
+    fontSize: 25,
+  },
+  tab: {
+    fontSize: 18,
   }
-}
+}));
 
-export default Siderbar;
+export default function VerticalTabs() {
+  const classes = useStyles();
+  const [value, setValue] = React.useState(0);
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
+
+  return (
+    <div className={classes.root}>
+      <Tabs
+        orientation="vertical"
+        variant="scrollable"
+        value={value}
+        onChange={handleChange}
+        aria-label="Vertical tabs example"
+        className={classes.tabs}
+      >
+        <Tab className ={classes.logo} label="IntelliRetailer" disabled>
+        </Tab>
+        <Tab className = {classes.tab} label="Upload"  />
+        <Tab className = {classes.tab} label="Item One"  />
+        <Tab className = {classes.tab} label="Item Two"  />
+        <Tab className = {classes.tab} label="Item Three"  />
+        <Tab className = {classes.tab} label="Item Four"  />
+        <Tab className = {classes.tab} label="Item Five"  />
+        <Tab className = {classes.tab} label="Item Six"  />
+        <Tab className = {classes.tab} label="Item Seven"  />
+      </Tabs>
+    </div>
+  );
+}
