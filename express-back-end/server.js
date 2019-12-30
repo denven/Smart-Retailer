@@ -12,6 +12,12 @@ App.get('/api/data', (req, res) => res.json({
   message: "Seems to work!",
 }));
 
+const router = Express.Router();
+const kenex = require('./database/db');
+const appRoutes = require('./routes/routes');
+appRoutes(router, kenex);
+App.use('/', router);
+
 App.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Express seems to be listening on port ${PORT} so that's pretty good 👍`);
