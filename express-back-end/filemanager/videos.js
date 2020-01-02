@@ -7,7 +7,7 @@ const shell = require('shelljs');
 //TODO: recieve file from front end and save to video path
 
 // Create folders used for processing different type of files 
-const prepareDirectories = () => {
+const prepareDataDirectories = () => {
 
   const userHome = require('os').homedir();
   __dirname = path.join(userHome, 'lighthouse', 'final', 'Demo');
@@ -25,7 +25,7 @@ const takeScreenshots = (faces, videoFileName) => {
   const frameImgPath = path.join(__dirname, 'Frames', '2019-12-30');
   shell.mkdir(frameImgPath);
 
-  return faces.Faces.map((frame) => {
+  return faces.map((frame) => {
 
     let newTimestamp = helper.msTohhmmssmmm(frame.Timestamp); 
     if (oldTimestamp !== newTimestamp) {  // same frame
@@ -56,7 +56,7 @@ const cropFacesFromScreenshots = (faces, videoFileName) => {
     const frameImgPath = path.join(__dirname, 'Frames', '2019-12-30');
     shell.mkdir(faceImgPath);
 
-    return faces.Faces.map((frame) => {
+    return faces.map((frame) => {
 
       let size = helper.getFaceBoundary(frame.Face.BoundingBox);
       frame.Timestamp = helper.msTohhmmssmmm(frame.Timestamp); 
@@ -72,30 +72,30 @@ const cropFacesFromScreenshots = (faces, videoFileName) => {
         sharp(`${frameImgPath}/frame-${newTimestamp}.png`)
           .extract({ width: size.Width, height: size.Height, left: size.Left, top: size.Top})
           .toFile(`${faceImgPath}/frame-${frame.Timestamp}-${sequence}.png`)
-          .then((file) => {resolve(file), console.log("crop one face image");})
+          // .then((file) => {resolve(file), console.log("crop one face image");})
           .catch((err) => reject(err));
       })
     });
 }
 
 // As there are many async operations, we make this function to make it more synchronously!
-const cropFacesFromVideo = (faces, videoFileName) => {
+const cropFacesFromLocalVideo = (faces, videoFileName) => {
 
-  prepareDirectories();
+  prepareDataDirectories();
   Promise.all(takeScreenshots(faces, videoFileName))
   .then( () => {
     console.log("Screenshots taken finished for video", videoFileName);
     Promise.all(cropFacesFromScreenshots(faces, videoFileName))
-    .then(()=>{console.timeEnd('New image crop'); console.log("Done!");});
+    .then(() => {console.log(`Crop all the faces for video ${videoFileName}: Done!`);});
   })
-  .catch((err)=>console.log(err));
+  .catch((err) => console.log(err));
 }
 
 // tests
-let faces = require('./allFaces.json');
-console.log(faces.Faces.length);
-console.time('New image crop');
-cropFacesFromVideo(faces, '/home/chengwen/lighthouse/final/Demo/Videos/sample-1.mp4');
+// let faces = require('./allFaces.json');
+// console.log(faces.Faces.length);
+// console.time('New image crop');
+// cropFacesFromLocalVideo(faces, '/home/chengwen/lighthouse/final/Demo/Videos/sample-1.mp4');
 
 
-module.exports = cropFacesFromVideo;
+module.exports = { cropFacesFromLocalVideo };
