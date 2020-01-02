@@ -2,8 +2,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const AWS = require('aws-sdk');
-const s3Client = new AWS.S3();
+// const AWS = require('aws-sdk');
+// const s3Client = new AWS.S3();
+const {s3} = require('../aws-servies');
+const s3Client =s3;
 
 // upload a file to s3
 const uploadOneFile = (fileName, bucketName) => {
@@ -69,8 +71,9 @@ const createFolderInBucket = (videoName, targetBucket) => {
 // }
 
 // function test
-// let facesbuck = createFolderInBucket('2019-12-29', "retailer-faces");
-// uploadMultiFiles('/home/chengwen/lighthouse/final/Smart-Retailer/express-back-end/filemanager/2019-12-29', facesbuck)
+let faces_bucket = createFolderInBucket('2019-12-29', "retailer-faces");
+uploadOneFile('/home/chengwen/lighthouse/final/Demo/Videos/sample-1.mp4', "retailer-videos");
+// uploadMultiFiles('/home/chengwen/lighthouse/final/Demo/Faces/2019-12-30', faces_bucket)
 // .then((data) => console.log(`Files uploaded successfully.`))
 // .catch((err) => console.log(err));
 
