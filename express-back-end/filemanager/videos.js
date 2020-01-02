@@ -18,22 +18,23 @@ const prepareDataDirectories = () => {
 }
 
 // Take screentshots for all the frames which is detected with faces
-const takeScreenshots = (faces, videoFileName) => {
+const takeScreenshots = (frames, videoFileName) => {
 
   let oldTimestamp = -1;
-  
+  let framesPromises = [];
+
   const frameImgPath = path.join(__dirname, 'Frames', '2019-12-30');
   shell.mkdir(frameImgPath);
 
-  return faces.map((frame) => {
+  for(const frame of frames) {
 
     let newTimestamp = helper.msTohhmmssmmm(frame.Timestamp); 
-    if (oldTimestamp !== newTimestamp) {  // same frame
+    if (oldTimestamp !== newTimestamp) {  // take screenshot for different frames
       oldTimestamp = newTimestamp; 
-      return new Promise((resolve, reject) => {
+      let promise = new Promise((resolve, reject) => {
         ffmpeg(videoFileName)
           .on('error', (err) => reject(err))
-          .on('end', () => resolve())
+          .on('end', (data) => resolve(data))
           .screenshots({
               timestamps: [newTimestamp],
               filename: `frame-${newTimestamp}.png`,
@@ -41,9 +42,11 @@ const takeScreenshots = (faces, videoFileName) => {
               size: `1280x720`
           });
       });  // return promise
+      framesPromises.push(promise);
     }
-  }); //map
-
+  };
+  
+  return framesPromises;
 }
 
 // Crop all the faces from different frames
@@ -67,13 +70,13 @@ const cropFacesFromScreenshots = (faces, videoFileName) => {
         sequence = 1;
       }
 
-      sequence++;
+      sequence++;  // count of face in one frame
       return new Promise((resolve, reject) => {
         sharp(`${frameImgPath}/frame-${newTimestamp}.png`)
           .extract({ width: size.Width, height: size.Height, left: size.Left, top: size.Top})
           .toFile(`${faceImgPath}/frame-${frame.Timestamp}-${sequence}.png`)
-          // .then((file) => {resolve(file), console.log("crop one face image");})
-          .catch((err) => reject(err));
+          .then(file => resolve(file))
+          .catch(err => reject(err));
       })
     });
 }
@@ -83,10 +86,11 @@ const cropFacesFromLocalVideo = (faces, videoFileName) => {
 
   prepareDataDirectories();
   Promise.all(takeScreenshots(faces, videoFileName))
-  .then( () => {
-    console.log("Screenshots taken finished for video", videoFileName);
+  .then( (frames) => {
+    console.log(`Extracted ${frames.length} frames from video ${videoFileName}`);
     Promise.all(cropFacesFromScreenshots(faces, videoFileName))
-    .then(() => {console.log(`Crop all the faces for video ${videoFileName}: Done!`);});
+    .then(data => {console.log(`Cropped ${data.length} faces from video ${videoFileName}: Done!`);})
+    .catch(err => console.log(err.stack));
   })
   .catch((err) => console.log(err));
 }
