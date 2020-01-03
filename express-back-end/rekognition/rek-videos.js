@@ -75,6 +75,12 @@ const addImageIntoCollection = (bucketName, collectionId) => {
                   });
                 } else {
                   console.log(`${faceImage.Key}: Found ${data.FaceMatches.length} Matched Faces in collection!`);
+                    if(data.FaceMatches.length >= 2) {
+                      let newDelFaces = data.FaceMatches.map(item => item.Face.FaceId);
+                      newDelFaces.splice(0,1);
+                      deletedFaces.push.apply(deletedFaces, newDelFaces);
+                    }
+
                   // (async() => keepUniqFaceInCollection(data.FaceMatches, collectionId))();
                   // console.log(`${faceImage.Key}: \n${JSON.stringify(data.FaceMatches)}`);
                 }
@@ -91,7 +97,15 @@ const addImageIntoCollection = (bucketName, collectionId) => {
           console.log(`${faceImage.Key}: Bad face quality, ${error}`); 
         }
 }    
-      });    
+      });
+
+      // deletedFaces = [...new Set(deletedFaces)];
+      setTimeout( () => {
+        deletedFaces = Array.from(new Set(deletedFaces));
+        console.log(deletedFaces.length);
+        keepUniqFaceInCollection(deletedFaces, collectionId);
+      }, 5000);
+    
     });
   } else {
       console.log(err, err.stack); // an error occurred
