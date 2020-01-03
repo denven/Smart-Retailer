@@ -1,11 +1,14 @@
 const AWS = require('aws-sdk');
+const inspect = require('util').inspect;
 
 const AWS_DEFAULT_REGION = 'us-west-2';
 const APP_VIDEO_BUCKET_NAME = 'retailer-videos';
 const APP_FACES_BUCKET_NAME = 'retailer-faces';
 const APP_FRAMES_BUCKET_NAME = 'retailer-frames';
 const APP_REK_SQS_NAME = 'Rekognition';
+const APP_REK_COLLECTION_ID = 'faces';
 const BUCKET_MAX_KEYS = 100;
+
 
 if (!AWS.config.region) {
   AWS.config.update({region: AWS_DEFAULT_REGION});
@@ -16,7 +19,7 @@ const rekognition = new AWS.Rekognition();
 
 async function awsServiceStart(awsTask) {
 
-  console.log(`Set default AWS service region: ${AWS_DEFAULT_REGION}`);  
+  console.log(`\n\n\n\nSet default AWS service region: ${AWS_DEFAULT_REGION}`);  
   
   AWS.config.getCredentials((err) => {
     console.log("Check dev credential: ");
@@ -32,6 +35,17 @@ async function awsServiceStart(awsTask) {
   if (typeof Promise === 'undefined') {
     AWS.config.setPromisesDependency(require('bluebird'));
   }
+
+  rekognition.listCollections({}, (err, data) => {
+    if(!data.CollectionIds.includes(APP_REK_COLLECTION_ID)) {
+      rekognition.createCollection({CollectionId: 'faces'}, (err, data) => {    
+        if (err) console.log(err, err.stack); // an error occurred
+        else     console.log(`Created CollectionId ${data.CollectionArn}`);           // successful response
+      });
+    } else {
+      console.log(`Already created CollecionId ${APP_REK_COLLECTION_ID} for the App`);
+    }
+  });
 
   // test s3 buckets and objects (NOTE: async apis)
   // s3.listBuckets((err, data) => {
@@ -77,102 +91,100 @@ async function awsServiceStart(awsTask) {
 // functions use SQS are below
 
 const getRekSQSMessageUrl = (queName) => {
-
-  sqs.getQueueUrl({ QueueName: queName }, (err, data) => {
-    if (err) console.log("Failed to get SQS name: ", err);
-    else { console.log(data.QueueUrl); return data.QueueUrl;}
+  return new Promise ((resolve, reject) => {
+    sqs.getQueueUrl({ QueueName: queName }).promise()
+    .then((data) => {
+      resolve(data.QueueUrl); 
+    }).catch(err => reject(`Failed to get SQS name: , ${err}`));
   });
 }
 
 async function deleteSQSHisMessages(queName) {
 
-  // const queue = sqs.getQueueUrl({ QueueName: queName }).promise();
-  // queue.then((data) => {
-  //   console.log(`A cretated SQS is found: ${data.QueueUrl}`);   
-    const params = {
-      AttributeNames: ["SenderId"],
-      MaxNumberOfMessages: 10,
-      MessageAttributeNames: ["All"],
-      QueueUrl: 'https://sqs.us-west-2.amazonaws.com/137668631249/Rekognition',
-      VisibilityTimeout: 20,
-      WaitTimeSeconds: 5     // test timeout
-    };
+  let sqsFullUrl = await getRekSQSMessageUrl(queName);
+  console.log(`The pre-cretated SQS is found: ${sqsFullUrl}`);   
+  const params = {
+    AttributeNames: ["SenderId"],
+    MaxNumberOfMessages: 10,
+    MessageAttributeNames: ["All"],
+    QueueUrl: sqsFullUrl,
+    VisibilityTimeout: 20,
+    WaitTimeSeconds: 5     // test timeout
+  };
 
-    sqs.receiveMessage(params).promise()
-    .then((data) => {
+  sqs.receiveMessage(params).promise()
+  .then((data) => {
+    return new Promise ((resolve, reject) => {
       if(data.Messages) {
-        console.log(`Received ${data.Messages.length} messages`, data);        
+        console.log(`Found ${data.Messages.length} history messages in SQS`); 
+      
+        let msgEntries = []; 
         for(const msg of data.Messages) {
-          const deleteParams = {
-            QueueUrl: params.QueueUrl,
-            ReceiptHandle: msg.ReceiptHandle
-          };
-
-          sqs.deleteMessage(deleteParams, (err, data) => {
-            if (err) { console.log("Delete Error:", err); }
-            else { console.log("History Message Deleted:", data); }
-          });
-        } 
-      } else {
-        console.log(`No message found in SQS: ${params.QueueUrl}`);        
-      }  
-    }).catch((err) => console.log(`Error in polling SQS message`));
-  // }
-  // .catch((err) => {
-  //   console.log("Failed to get SQS name:", err)
-  // });
+          msgEntries.push({ Id: msg.MessageId, ReceiptHandle: msg.ReceiptHandle});
+        };
+        const deleteParams = {
+          Entries: msgEntries,
+          QueueUrl: params.QueueUrl
+        }
+        resolve (deleteParams);
+      } else {   
+        reject(`No message found in SQS`);   
+      } 
+    });
+  })
+  .then((deleteParams) => {
+    sqs.deleteMessageBatch(deleteParams, (err, data) => {
+      if (err) { console.log("Delete Error:", err); }
+      else { 
+        console.log(`Deleted ${deleteParams.Entries.length} history messages in SQS`); 
+      }
+    });   
+  }).catch((err) => console.log(`Error in polling SQS message:`, err));
 
 }
 
 // https://sqs.us-west-2.amazonaws.com/137668631249/Rekognition
-async function getSQSMessageSuccess (queName, jobId) {
+async function getSQSMessageSuccess(queName, jobId) {
 
-  quePromise = sqs.getQueueUrl({ QueueName: queName }).promise();  
-  quePromise.then((data) => {
-    console.log(`A cretated SQS is found: ${data.QueueUrl}`);   
+  // quePromise = sqs.getQueueUrl({ QueueName: queName }).promise();  
+  // quePromise.then((data) => {
+  //   console.log(`Found rekognition SQS QueueUrl: ${data.QueueUrl}`);   
     const params = {
       AttributeNames: ["SenderId"],
       MaxNumberOfMessages: 10,
       MessageAttributeNames: ["All"],
-      QueueUrl: data.QueueUrl,
+      QueueUrl: `https://sqs.us-west-2.amazonaws.com/137668631249/Rekognition`,
       VisibilityTimeout: 20,
       WaitTimeSeconds: 20     // test timeout, max allowed value is 20
     };    
 
-    // const msgPromise = sqs.receiveMessage(params).promise();
-    return sqs.receiveMessage(params).promise();
-  })
-  .then((data) => {
-    let jobFinished = false;
-    if(data.Messages) {
-        for(const msg of data.Messages) {
-          const msgContent = JSON.parse(JSON.parse(msg.Body).Message);
-          if ((msgContent.JobId === jobId) && (msgContent.Status === 'SUCCEEDED')) {
-            jobFinished = true;
-            console.log(`Rekognition Job Query result: ${msgContent.Status}! JobId: ${jobId}. `);
-          }
+    let msgFound = false;
+    await sqs.receiveMessage(params).promise().then((data) => {
+      // return new Promise ((resovle, reject) => { 
+        if(data.Messages) {
+          for(const msg of data.Messages) {
+            const msgContent = JSON.parse(JSON.parse(msg.Body).Message);
+            if (msgContent.JobId === jobId) {
+              if (msgContent.Status === 'SUCCEEDED') {
+                console.log(`Rekognition Job Query result: ${msgContent.Status}! JobId: ${jobId}`);
+                msgFound = true;
+              } else {
+                msgFound = getSQSMessageSuccess(queName, jobId);
+              }
+            }
+          } // end of for  
+        } else {
+          console.log(`Timeout, failed to the msg in (${params.WaitTimeSeconds} seconds from sqs, try another time...`);
+          msgFound = getSQSMessageSuccess(queName, jobId);  // retry by recursion
+        }
+      // }); // promise
+    }).catch((err) => { 
+      console.log("SQS Receive Error:", err); 
+    });
 
-          // const deleteParams = {
-          //   QueueUrl: params.QueueUrl,
-          //   ReceiptHandle: msg.ReceiptHandle
-          // };    
-          // sqs.deleteMessage(deleteParams, (err, data) => {
-          //   if (err) { console.log("Delete Error:", err); }
-          //   else { console.log("Message Deleted:", data); }
-          // });
-        } // end of for           
-    } else {
-      console.log(`Timeout to get SQS messages, tried ${params.WaitTimeSeconds} seconds!`);
-    }   
-    console.log("I returned here", jobFinished);
-    return jobFinished; 
-  })
-  .catch((err) => { 
-    console.log("SQS Receive Error:", err); 
-    return false;
-  });
-  
-  console.log("I returned in the end");
+    return msgFound;
+
+  // });  
 }
 
 module.exports = {
@@ -181,6 +193,8 @@ module.exports = {
   APP_FACES_BUCKET_NAME,
   APP_FRAMES_BUCKET_NAME,
   APP_REK_SQS_NAME,
+  APP_REK_COLLECTION_ID,
+  BUCKET_MAX_KEYS,
   awsServiceStart,
   deleteSQSHisMessages,
   getSQSMessageSuccess
