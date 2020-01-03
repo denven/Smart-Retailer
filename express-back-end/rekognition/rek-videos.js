@@ -103,7 +103,11 @@ const addImageIntoCollection = (bucketName, collectionId) => {
       setTimeout( () => {
         deletedFaces = Array.from(new Set(deletedFaces));
         console.log(deletedFaces.length);
-        keepUniqFaceInCollection(deletedFaces, collectionId);
+        const params = { CollectionId: collectionId, FaceIds: deletedFaces};
+        rekognition.deleteFaces(params, function(err, data) {
+          if (err) console.log(`Error when deleting faces from collection ${err}`); // an error occurred
+          else     console.log(data);           // successful response
+        });
       }, 5000);
     
     });
