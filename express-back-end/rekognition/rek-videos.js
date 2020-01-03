@@ -7,6 +7,22 @@ const {AWS, s3, rekognition,
 
 const video = require('../filemanager/videos');
 
+const getBestMatchedFaceId = (matchedFaces) => {
+  return matchedFaces[0].Face.FaceId; // save it into local database
+}
+
+const keepUniqFaceInCollection = (matchedFaces, collectionId) => {
+  if(matchedFaces.length >= 2) {
+    let delFaces = matchedFaces.map(item => item.Face.FaceId);
+    delFaces.splice(0,1);
+    console.log(`We will delete ${delFaces.length} faces in collection`);
+    const params = { CollectionId: collectionId, FaceIds: delFaces};
+    rekognition.deleteFaces(params, function(err, data) {
+      if (err) console.log(`Error when deleting faces from collection ${err}`); // an error occurred
+      else     console.log(data);           // successful response
+    });
+  }
+}
  
 const addImageIntoCollection = (bucketName, collectionId) => {
 
@@ -20,8 +36,9 @@ const addImageIntoCollection = (bucketName, collectionId) => {
     console.log("Adding objects into index ....", bucketName);
 
     if (!err) {
+      let deletedFaces = [];
       s3.listObjects(bucketParams, (err, buckObjsData) => {
-        buckObjsData.Contents.forEach((faceImage) => {
+        buckObjsData.Contents.forEach((faceImage, index) => {
         // faceImage = buckObjsData.Contents[1];
         const params = {
           CollectionId: collectionId,
@@ -34,33 +51,47 @@ const addImageIntoCollection = (bucketName, collectionId) => {
 
         const imgParams = {
           CollectionId: collectionId,
-          FaceMatchThreshold: 95,
+          FaceMatchThreshold: 98,
           Image: { S3Object: { Bucket: bucketName, Name: faceImage.Key } },
           MaxFaces: 100,
           QualityFilter: 'HIGH'
         }
-
+// if (index < 1) 
+{
         try {
-          rekognition.searchFacesByImage(imgParams, (err, data) => {
-            if (!err) {
-              if (data.FaceMatches.length === 0) {           // successful response
-                rekognition.indexFaces(params, (err, data) => {
-                  if (err) console.log(err); // an error occurred
-                  else console.log("Added frame into Index", faceImage.Key);           // successful response
-                });
+          let facesInCollection = rekognition.describeCollection(collectionId);
+          if (facesInCollection.FaceCount === 0) {
+            rekognition.indexFaces(params, (err, data) => {
+              if (err) console.log(`${faceImage.Key}: indexFaces, ${err}`); // an error occurred
+              else console.log(`${faceImage.Key}: Added face into collection`);
+            });
+          } else {
+            rekognition.searchFacesByImage(imgParams, (err, data) => {
+              if (!err) {
+                if (data.FaceMatches.length === 0) { 
+                  rekognition.indexFaces(params, (err, data) => {
+                    if (err) console.log(`${faceImage.Key}: indexFaces, ${err}`); // an error occurred
+                    else console.log(`${faceImage.Key}: Added face into collection`);
+                  });
+                } else {
+                  console.log(`${faceImage.Key}: Found ${data.FaceMatches.length} Matched Faces in collection!`);
+                  // (async() => keepUniqFaceInCollection(data.FaceMatches, collectionId))();
+                  // console.log(`${faceImage.Key}: \n${JSON.stringify(data.FaceMatches)}`);
+                }
               } else {
-                console.log(`${faceImage.Key}: Found ${data.FaceMatches.length} Matched Faces in collection!`);
-                console.log(`${faceImage.Key}: \n${JSON.stringify(data.FaceMatches)}`);
+                if('InvalidParameterException' === err.name) {
+                  console.log(`${faceImage.Key}: Bad quality Face image when searching in collection`); 
+                } else {
+                  console.log(`${faceImage.Key}: Error in SearchFacesByImage, ${err.name}`);
+                }
               }
-            } else {
-              console.log(`${faceImage.Key}: Error in Adding to index, ${err}`);  //
-            }
-          });          
+            });     
+          }     
         } catch (error) {
           console.log(`${faceImage.Key}: Bad face quality, ${error}`); 
         }
-
-      });
+}    
+      });    
     });
   } else {
       console.log(err, err.stack); // an error occurred
@@ -148,9 +179,9 @@ const beforeVideoAnalysis = () => {
 };
 
 // call this function when click 
-beforeVideoAnalysis();
+// beforeVideoAnalysis();
 
 
 
 
-// addImageIntoCollection(APP_FACES_BUCKET_NAME, APP_REK_COLLECTION_ID);
+addImageIntoCollection(APP_FACES_BUCKET_NAME, APP_REK_COLLECTION_ID);
