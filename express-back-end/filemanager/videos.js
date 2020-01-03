@@ -4,6 +4,9 @@ const sharp = require('sharp');
 const path = require('path');
 const shell = require('shelljs');
 
+const s3Client = require('./s3bucket');
+const APP_FACES_BUCKET_NAME = 'retailer-faces';
+
 //TODO: recieve file from front end and save to video path
 
 // Create folders used for processing different type of files 
@@ -45,7 +48,7 @@ const takeScreenshots = (frames, videoFileName) => {
       framesPromises.push(promise);
     }
   };
-  
+
   return framesPromises;
 }
 
@@ -82,6 +85,7 @@ const cropFacesFromScreenshots = (faces, videoFileName) => {
 }
 
 // As there are many async operations, we make this function to make it more synchronously!
+// after the croping job, upload all the faces images into s3 buckets 
 const cropFacesFromLocalVideo = (faces, videoFileName) => {
 
   prepareDataDirectories();
@@ -89,7 +93,16 @@ const cropFacesFromLocalVideo = (faces, videoFileName) => {
   .then( (frames) => {
     console.log(`Extracted ${frames.length} frames from video ${videoFileName}`);
     Promise.all(cropFacesFromScreenshots(faces, videoFileName))
-    .then(data => {console.log(`Cropped ${data.length} faces from video ${videoFileName}: Done!`);})
+    .then(data => {
+      console.log(`Cropped ${data.length} faces from video ${videoFileName}, Done!`);
+      const faceImgPath = path.join(__dirname, 'Faces', '2019-12-30');
+      let faces_bucket = s3Client.createFolderInBucket('2019-12-30', "retailer-faces");
+      setTimeout( () => {
+        s3Client.uploadMultiFiles(faceImgPath, faces_bucket)
+        .then((data) => console.log(`Uploaded ${data.length} face images to ${faces_bucket} successfully.`))
+        .catch((err) => console.log(err));
+      },1000);
+    })
     .catch(err => console.log(err.stack));
   })
   .catch((err) => console.log(err));
