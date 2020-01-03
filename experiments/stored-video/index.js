@@ -76,10 +76,12 @@ const addFramesIntoCollection = (bucketName, collectionId) => {
           else console.log("Added frame into Index", frameObj.Key);           // successful response
         });
       });
-    } else {
+    });
+   } else {
       console.log(err, err.stack); // an error occurred
     }
   });
+
 
 };
 

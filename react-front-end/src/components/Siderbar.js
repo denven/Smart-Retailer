@@ -1,17 +1,18 @@
-import React from 'react';
+import React, {useState} from 'react';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles(theme => ({
   root: {
-    flexGrow: 1,
     backgroundColor: theme.palette.background.paper,
     display: 'flex',
+    width: 251,
+    order: 0
   },
   tabs: {
     borderRight: `2px solid ${theme.palette.divider}`,
-    height: 1150
+    height: 870
   },
   logo: {
     fontSize: 25,
@@ -22,6 +23,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 export default function VerticalTabs() {
+  const {state, setState} = useState("item one");
+
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
 
@@ -39,9 +42,12 @@ export default function VerticalTabs() {
         aria-label="Vertical tabs example"
         className={classes.tabs}
       >
-        <Tab className ={classes.logo} label="IntelliRetailer" disabled>
+        <Tab className ={classes.logo} label="Smart-Retailer" disabled>
         </Tab>
         <Tab className = {classes.tab} label="Upload"  />
+        <Tab className = {classes.tab} label="Search">
+          <input type="search" name="googlesearch"/>
+        </Tab>
         <Tab className = {classes.tab} label="Item One"  />
         <Tab className = {classes.tab} label="Item Two"  />
         <Tab className = {classes.tab} label="Item Three"  />
