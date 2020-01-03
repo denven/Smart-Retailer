@@ -2,10 +2,12 @@ const _ = require('lodash');
 
 const {AWS, s3, rekognition,
   APP_VIDEO_BUCKET_NAME, APP_FACES_BUCKET_NAME, APP_FRAMES_BUCKET_NAME, APP_REK_SQS_NAME,
+  APP_REK_COLLECTION_ID, BUCKET_MAX_KEYS,
   awsServiceStart, deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
 
 const video = require('../filemanager/videos');
 
+ 
 const addImageIntoCollection = (bucketName, collectionId) => {
 
   const bucketParams = {
@@ -19,19 +21,45 @@ const addImageIntoCollection = (bucketName, collectionId) => {
 
     if (!err) {
       s3.listObjects(bucketParams, (err, buckObjsData) => {
-        buckObjsData.Contents.forEach((frameObj) => {
+        buckObjsData.Contents.forEach((faceImage) => {
+        // faceImage = buckObjsData.Contents[1];
         const params = {
           CollectionId: collectionId,
           DetectionAttributes: ["ALL"],
-          Image: { S3Object: { Bucket: bucketName, Name: frameObj.Key } },
+          ExternalImageId: faceImage.Key,
+          Image: { S3Object: { Bucket: bucketName, Name: faceImage.Key } },
           MaxFaces: 10,
-          QualityFilter: "AUTO"  // change to HIGH may be better
+          QualityFilter: "HIGH"  // change to HIGH may be better
         };
 
-        rekognition.indexFaces(params, (err, data) => {
-          if (err) console.log(err); // an error occurred
-          else console.log("Added frame into Index", frameObj.Key);           // successful response
-        });
+        const imgParams = {
+          CollectionId: collectionId,
+          FaceMatchThreshold: 95,
+          Image: { S3Object: { Bucket: bucketName, Name: faceImage.Key } },
+          MaxFaces: 100,
+          QualityFilter: 'HIGH'
+        }
+
+        try {
+          rekognition.searchFacesByImage(imgParams, (err, data) => {
+            if (!err) {
+              if (data.FaceMatches.length === 0) {           // successful response
+                rekognition.indexFaces(params, (err, data) => {
+                  if (err) console.log(err); // an error occurred
+                  else console.log("Added frame into Index", faceImage.Key);           // successful response
+                });
+              } else {
+                console.log(`${faceImage.Key}: Found ${data.FaceMatches.length} Matched Faces in collection!`);
+                console.log(`${faceImage.Key}: \n${JSON.stringify(data.FaceMatches)}`);
+              }
+            } else {
+              console.log(`${faceImage.Key}: Error in Adding to index, ${err}`);  //
+            }
+          });          
+        } catch (error) {
+          console.log(`${faceImage.Key}: Bad face quality, ${error}`); 
+        }
+
       });
     });
   } else {
@@ -95,35 +123,34 @@ const getFacesDetails = (faceData) => {
 const s3_video_key = 'sample-1.mp4';
 const video_path = '/home/chengwen/lighthouse/final/Demo/Videos/sample-1.mp4';
 
-( async() => {
+const beforeVideoAnalysis = () => {
   // await awsServiceStart();
-  deleteSQSHisMessages(APP_REK_SQS_NAME);  //delete history messages
-  startFaceDetection(s3_video_key).then((faceData) => {
+  deleteSQSHisMessages(APP_REK_SQS_NAME)  //;  //delete history messages
+  .then( (prepared) => {
 
-    // TODO: when total number of faces > 1000 for the long duration videos
-    const params = { JobId: faceData.JobId, MaxResults: 1000};  
-    console.log(`StartFaceDetection's JobId is: ${faceData.JobId}`);
-    setTimeout ( () => {
-      if (getSQSMessageSuccess(APP_REK_SQS_NAME, faceData.JobId)) {
+    startFaceDetection(s3_video_key).then((faceData) => {
+      // TODO: when total number of faces > 1000 for the long duration videos
+      const params = { JobId: faceData.JobId, MaxResults: 1000};  
+      console.log(`StartFaceDetection..., JobId: ${faceData.JobId}`);      
+      getSQSMessageSuccess(APP_REK_SQS_NAME, faceData.JobId).then((status) => {
         rekognition.getFaceDetection(params, (err, data) => {
-          if (err) console.log(err, err.stack);
-          else {
+          if (!err) {
             let faces = getFacesDetails(data); 
-            video.cropFacesFromLocalVideo(faces, video_path);  // generate faces from each frame
+            video.cropFacesFromLocalVideo(faces, video_path);
+          } else {
+            console.log(err, err.stack);
           }
         });
-      } 
-    }, 40000);
-  })
-  .catch((err) => console.log("Failed to detect faces from video on S3:", err.stack));
-})();
+      });
+    }).catch((err) => console.log("Failed to detect faces from video on S3:", err.stack));
+  });
+
+};
+
+// call this function when click 
+beforeVideoAnalysis();
 
 
 
 
-
-
-// rekognition.compareFaces(params, function(err, data) {
-//   if (err) console.log(err, err.stack); // an error occurred
-//   else     console.log(data);           // successful response
-// });
+// addImageIntoCollection(APP_FACES_BUCKET_NAME, APP_REK_COLLECTION_ID);
