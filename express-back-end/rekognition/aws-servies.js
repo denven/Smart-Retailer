@@ -112,8 +112,7 @@ async function deleteSQSHisMessages(queName) {
     WaitTimeSeconds: 5     // test timeout
   };
 
-  sqs.receiveMessage(params).promise()
-  .then((data) => {
+  await sqs.receiveMessage(params).promise().then((data) => {
     return new Promise ((resolve, reject) => {
       if(data.Messages) {
         console.log(`Found ${data.Messages.length} history messages in SQS`); 
@@ -174,7 +173,7 @@ async function getSQSMessageSuccess(queName, jobId) {
             }
           } // end of for  
         } else {
-          console.log(`Timeout, failed to the msg in (${params.WaitTimeSeconds} seconds from sqs, try another time...`);
+          console.log(`Timeout, failed to get msg in ${params.WaitTimeSeconds} seconds from sqs, try another time...`);
           msgFound = getSQSMessageSuccess(queName, jobId);  // retry by recursion
         }
       // }); // promise
