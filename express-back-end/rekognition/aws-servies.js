@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk');
+require('dotenv').config();
 const inspect = require('util').inspect;
 
 const AWS_DEFAULT_REGION = 'us-west-2';
@@ -9,6 +10,10 @@ const APP_REK_SQS_NAME = 'Rekognition';
 const APP_REK_COLLECTION_ID = 'faces';
 const BUCKET_MAX_KEYS = 100;
 
+const APP_ROLE_ARN = process.env.ROLE_ARN;
+const APP_SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
+
+let sqsQueueUrl = null;   
 
 if (!AWS.config.region) {
   AWS.config.update({region: AWS_DEFAULT_REGION});
@@ -46,6 +51,8 @@ async function awsServiceStart(awsTask) {
       console.log(`Already created CollecionId ${APP_REK_COLLECTION_ID} for the App`);
     }
   });
+
+  sqs.getQueueUrl({ QueueName: APP_REK_SQS_NAME}).promise().then((data) => sqsQueueUrl = data.QueueUrl); 
 
   // test s3 buckets and objects (NOTE: async apis)
   // s3.listBuckets((err, data) => {
@@ -102,14 +109,14 @@ const getRekSQSMessageUrl = (queName) => {
 async function deleteSQSHisMessages(queName) {
 
   let sqsFullUrl = await getRekSQSMessageUrl(queName);
-  console.log(`The pre-cretated SQS is found: ${sqsFullUrl}`);   
+  console.log(`Pre-cretated SQS Queue Url is found: ${sqsFullUrl}`);   
   const params = {
     AttributeNames: ["SenderId"],
     MaxNumberOfMessages: 10,
     MessageAttributeNames: ["All"],
     QueueUrl: sqsFullUrl,
     VisibilityTimeout: 20,
-    WaitTimeSeconds: 5     // test timeout
+    WaitTimeSeconds: 20     // test timeout
   };
 
   await sqs.receiveMessage(params).promise().then((data) => {
@@ -125,20 +132,22 @@ async function deleteSQSHisMessages(queName) {
           Entries: msgEntries,
           QueueUrl: params.QueueUrl
         }
-        resolve (deleteParams);
+        sqs.deleteMessageBatch(deleteParams, (err) => {
+          if (err) { reject(`Error when deleting SQS Message: ${err}`); }
+          else { 
+            console.log(`Deleted ${deleteParams.Entries.length} history messages in SQS`); 
+            resolve('DELETED');
+          }
+        }); 
       } else {   
-        reject(`No message found in SQS`);   
+         reject(`No message found`);
       } 
-    });
+     });
   })
-  .then((deleteParams) => {
-    sqs.deleteMessageBatch(deleteParams, (err, data) => {
-      if (err) { console.log("Delete Error:", err); }
-      else { 
-        console.log(`Deleted ${deleteParams.Entries.length} history messages in SQS`); 
-      }
-    });   
-  }).catch((err) => console.log(`Error in polling SQS message:`, err));
+  // .then((deleteParams) => {
+  // then() is used in caller js file
+  // })
+  .catch((err) => console.log(`Polling SQS messages:,`, err));
 
 }
 
@@ -148,11 +157,14 @@ async function getSQSMessageSuccess(queName, jobId) {
   // quePromise = sqs.getQueueUrl({ QueueName: queName }).promise();  
   // quePromise.then((data) => {
   //   console.log(`Found rekognition SQS QueueUrl: ${data.QueueUrl}`);   
+    let sqsQueueUrl = null;
+    await sqs.getQueueUrl({ QueueName: APP_REK_SQS_NAME}).promise().then((data) => sqsQueueUrl = data.QueueUrl); 
+
     const params = {
       AttributeNames: ["SenderId"],
       MaxNumberOfMessages: 10,
       MessageAttributeNames: ["All"],
-      QueueUrl: `https://sqs.us-west-2.amazonaws.com/137668631249/Rekognition`,
+      QueueUrl: sqsQueueUrl,
       VisibilityTimeout: 20,
       WaitTimeSeconds: 20     // test timeout, max allowed value is 20
     };    
@@ -168,7 +180,7 @@ async function getSQSMessageSuccess(queName, jobId) {
                 console.log(`Rekognition Job Query result: ${msgContent.Status}! JobId: ${jobId}`);
                 msgFound = true;
               } else {
-                msgFound = getSQSMessageSuccess(queName, jobId);
+                msgFound = (async() => getSQSMessageSuccess(queName, jobId))();
               }
             }
           } // end of for  
@@ -187,10 +199,12 @@ async function getSQSMessageSuccess(queName, jobId) {
 }
 
 module.exports = {
-  AWS, s3, rekognition,
+  AWS, s3, rekognition, sqsQueueUrl,
   APP_VIDEO_BUCKET_NAME,
   APP_FACES_BUCKET_NAME,
   APP_FRAMES_BUCKET_NAME,
+  APP_ROLE_ARN,
+  APP_SNS_TOPIC_ARN,
   APP_REK_SQS_NAME,
   APP_REK_COLLECTION_ID,
   BUCKET_MAX_KEYS,
