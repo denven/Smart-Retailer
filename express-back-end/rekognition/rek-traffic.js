@@ -1,8 +1,8 @@
-// This module will use large memory
-const {AWS, s3, rekognition, 
-  APP_VIDEO_BUCKET_NAME, APP_FACES_BUCKET_NAME, APP_FRAMES_BUCKET_NAME, APP_REK_SQS_NAME,
-  APP_REK_COLLECTION_ID, BUCKET_MAX_KEYS,  APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
-  awsServiceStart, deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
+// This module will use large memory and the analysis is time consuming
+// no faces collection needed when processing
+
+const { rekognition, APP_VIDEO_BUCKET_NAME, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
+  APP_REK_SQS_NAME, deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
 
 const startPersonTracking = (videoKey) => {
 
@@ -29,7 +29,7 @@ const startPersonTracking = (videoKey) => {
 };
 
 // Note: There is no faceId in this returned data.
-const getPersonsInVideo = (trackData) => {
+const getAllPersonsData = (trackData) => {
   
   let allPersonsData = [];  
   for (const item of trackData.Persons) {    
@@ -39,12 +39,16 @@ const getPersonsInVideo = (trackData) => {
     };
     allPersonsData.push(newItem);
   }
+  return allPersonsData;
+}
+
+const getPersonsInVideo = (allPersonsData) => {
 
   let allPersons = [];
   let oldIndex = -1;
   let person = {show_timestamp: '', leave_timestamp: '', index: '' };
-  for (const item of allPersonsData) {
 
+  for (const item of allPersonsData) {
     if(item.Index !== oldIndex) { 
       if(oldIndex >= 0) {
         let newObj = JSON.parse(JSON.stringify(person));
@@ -65,7 +69,7 @@ const getPersonsInVideo = (trackData) => {
 
 };
 
-const getVideoTraffic = (persons) => {
+async function getVideoTraffic (persons) {
 
   return persons.map((person, index) => {
     return {
@@ -82,18 +86,31 @@ const video_local_path = '/home/chengwen/lighthouse/final/Demo/Videos/sample-.mp
 const getPersonsTracking = (jobId) => {
 
   let nextToken = '';
+  let allPersonsData = [];
+
   do { 
-    const params = { JobId: jobId, MaxResults: 1000, NextToken: nextToken, SortBy: "INDEX"};  // by PERSON INDEX
+    const params = { JobId: jobId, MaxResults: 1000, NextToken: nextToken, SortBy: "INDEX"};
     rekognition.getPersonTracking(params, (err, trackData) => {
       if (!err) {
-        let persons = getPersonsInVideo(trackData);
-        console.log(`Found ${persons.length} persons in video ${s3_video_key}`);
+        let curReqData = getAllPersonsData(trackData);
+        allPersonsData.push.apply(allPersonsData, curReqData);
         nextToken = trackData.NextToken || '';
       } else {
         console.log(err, err.stack);
       }
     });
   } while (nextToken);
+
+  // althoug getPersonTracking is not asynchronous, but it still takes more time to excute
+  // and the while loop may not be able to loop as it gets a empty nextToken before it's altered
+  // use a timeout to excute the following codes, otherwise, we will get an empty allPersonsData
+  // or change the loop into async/await or promise
+  setTimeout(()=>{
+    console.log(allPersonsData.length);
+    let persons = getPersonsInVideo(allPersonsData);
+    console.log(`Found ${persons.length} persons in video ${s3_video_key}`);
+  }, 5000); 
+
 }
 
 const startPersonTrackingAnalysis = (s3_video_key) => {
@@ -118,7 +135,7 @@ const startPersonTrackingAnalysis = (s3_video_key) => {
 
 // test code
 // startPersonTrackingAnalysis(s3_video_key);
-// getPersonsTracking('15409357db4f5ec53f4d3d3722f4a41d849ab02b41f6d5280c8464e04c183b3a');
+getPersonsTracking('ed96bc196e712dbe28df2cc6d87a2739c369165d3a52e9c86f68c4db20360e82');
 
 module.exports = {
   startPersonTrackingAnalysis
