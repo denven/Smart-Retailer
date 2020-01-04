@@ -1,13 +1,12 @@
 // This module will use large memory
 const _ = require('lodash');
 
-const {AWS, s3, rekognition,
+const {AWS, s3, rekognition, 
   APP_VIDEO_BUCKET_NAME, APP_FACES_BUCKET_NAME, APP_FRAMES_BUCKET_NAME, APP_REK_SQS_NAME,
-  APP_REK_COLLECTION_ID, BUCKET_MAX_KEYS,
+  APP_REK_COLLECTION_ID, BUCKET_MAX_KEYS,  APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   awsServiceStart, deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
 
 const video = require('../filemanager/videos');
-
 
 const startPersonTracking = (videoKey) => {
 
@@ -20,8 +19,8 @@ const startPersonTracking = (videoKey) => {
       // ClientRequestToken: "startFaceDetectionToken",
       JobTag: "startPersonTracking",
       NotificationChannel: {
-        RoleArn: 'arn:aws:iam::137668631249:role/Rekognition_Final', 
-        SNSTopicArn: "arn:aws:sns:us-west-2:137668631249:AmazonRekognition-Final"
+        RoleArn: APP_ROLE_ARN,
+        SNSTopicArn: APP_SNS_TOPIC_ARN
       }
     }
 
