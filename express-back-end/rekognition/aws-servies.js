@@ -7,7 +7,10 @@ const APP_VIDEO_BUCKET_NAME = 'retailer-videos';
 const APP_FACES_BUCKET_NAME = 'retailer-faces';
 const APP_FRAMES_BUCKET_NAME = 'retailer-frames';
 const APP_REK_SQS_NAME = 'Rekognition';
-const APP_REK_COLLECTION_ID = 'faces';
+
+const APP_REK_DB_COLLECTION_ID = 'faces-db';
+const APP_REK_TEMP_COLLECTION_ID = 'transition';
+
 const BUCKET_MAX_KEYS = 100;
 
 const APP_ROLE_ARN = process.env.ROLE_ARN;
@@ -42,13 +45,13 @@ async function awsServiceStart(awsTask) {
   }
 
   rekognition.listCollections({}, (err, data) => {
-    if(!data.CollectionIds.includes(APP_REK_COLLECTION_ID)) {
-      rekognition.createCollection({CollectionId: 'faces'}, (err, data) => {    
+    if(!data.CollectionIds.includes(APP_REK_TEMP_COLLECTION_ID)) {
+      rekognition.createCollection({CollectionId: APP_REK_TEMP_COLLECTION_ID}, (err, data) => {    
         if (err) console.log(err, err.stack); // an error occurred
-        else     console.log(`Created CollectionId ${data.CollectionArn}`);           // successful response
+        else     console.log(`Created Collection, Id: ${data.CollectionArn}`);           // successful response
       });
     } else {
-      console.log(`Already created CollecionId ${APP_REK_COLLECTION_ID} for the App`);
+      console.log(`Already created CollecionId ${APP_REK_TEMP_COLLECTION_ID} for the App`);
     }
   });
 
@@ -109,7 +112,7 @@ const getRekSQSMessageUrl = (queName) => {
 async function deleteSQSHisMessages(queName) {
 
   let sqsFullUrl = await getRekSQSMessageUrl(queName);
-  console.log(`Pre-cretated SQS Queue Url is found: ${sqsFullUrl}`);   
+  // console.log(`Pre-cretated SQS Queue Url is found: ${sqsFullUrl}`);   
   const params = {
     AttributeNames: ["SenderId"],
     MaxNumberOfMessages: 10,
@@ -156,15 +159,16 @@ async function getSQSMessageSuccess(queName, jobId) {
 
   // quePromise = sqs.getQueueUrl({ QueueName: queName }).promise();  
   // quePromise.then((data) => {
-  //   console.log(`Found rekognition SQS QueueUrl: ${data.QueueUrl}`);   
-    let sqsQueueUrl = null;
-    await sqs.getQueueUrl({ QueueName: APP_REK_SQS_NAME}).promise().then((data) => sqsQueueUrl = data.QueueUrl); 
+  // console.log(`Found rekognition SQS QueueUrl: ${data.QueueUrl}`);   
 
+    // let sqsQueueUrl = null;
+    // await sqs.getQueueUrl({ QueueName: APP_REK_SQS_NAME}).promise().then((data) => sqsQueueUrl = data.QueueUrl); 
+    let sqsFullUrl = await getRekSQSMessageUrl(queName);
     const params = {
       AttributeNames: ["SenderId"],
       MaxNumberOfMessages: 10,
       MessageAttributeNames: ["All"],
-      QueueUrl: sqsQueueUrl,
+      QueueUrl: sqsFullUrl,
       VisibilityTimeout: 20,
       WaitTimeSeconds: 20     // test timeout, max allowed value is 20
     };    
@@ -180,13 +184,13 @@ async function getSQSMessageSuccess(queName, jobId) {
                 console.log(`Rekognition Job Query result: ${msgContent.Status}! JobId: ${jobId}`);
                 msgFound = true;
               } else {
-                msgFound = (async() => getSQSMessageSuccess(queName, jobId))();
+                msgFound = (async() => await getSQSMessageSuccess(queName, jobId))();
               }
             }
           } // end of for  
         } else {
           console.log(`Timeout, failed to get msg in ${params.WaitTimeSeconds} seconds from sqs, try another time...`);
-          msgFound = getSQSMessageSuccess(queName, jobId);  // retry by recursion
+          msgFound = (async() => await getSQSMessageSuccess(queName, jobId))();
         }
       // }); // promise
     }).catch((err) => { 
@@ -206,7 +210,8 @@ module.exports = {
   APP_ROLE_ARN,
   APP_SNS_TOPIC_ARN,
   APP_REK_SQS_NAME,
-  APP_REK_COLLECTION_ID,
+  APP_REK_DB_COLLECTION_ID,
+  APP_REK_TEMP_COLLECTION_ID,
   BUCKET_MAX_KEYS,
   awsServiceStart,
   deleteSQSHisMessages,

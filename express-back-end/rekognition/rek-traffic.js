@@ -69,17 +69,6 @@ const getPersonsInVideo = (allPersonsData) => {
 
 };
 
-async function getVideoTraffic (persons) {
-
-  return persons.map((person, index) => {
-    return {
-      timestamp: person.show_timestamp,
-      count: ++index
-    }
-  });
-
-}
-
 const s3_video_key = 'sample-3.mp4';
 const video_local_path = '/home/chengwen/lighthouse/final/Demo/Videos/sample-.mp4';
 
@@ -101,10 +90,11 @@ const getPersonsTracking = (jobId) => {
     });
   } while (nextToken);
 
-  // althoug getPersonTracking is not asynchronous, but it still takes more time to excute
-  // and the while loop may not be able to loop as it gets a empty nextToken before it's altered
+  // althoug getPersonTracking is not an asynchronous function from aws docs, but it still 
+  // takes much time to excute and the while may not be able to loop as it hits a empty 
+  // nextToken before it's altered in the callback
   // use a timeout to excute the following codes, otherwise, we will get an empty allPersonsData
-  // or change the loop into async/await or promise
+  // or change the loop into async/await or promise, or a recursion implementation version
   setTimeout(()=>{
     console.log(allPersonsData.length);
     let persons = getPersonsInVideo(allPersonsData);
