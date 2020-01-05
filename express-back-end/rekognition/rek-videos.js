@@ -5,7 +5,7 @@ const { s3, rekognition,
   APP_REK_TEMP_COLLECTION_ID, BUCKET_MAX_KEYS, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
 
-const {getUniqFaceDetails} = require('./rek-search');
+const { getUniqFaceDetails } = require('./rek-search');
 
 const video = require('../filemanager/videos');
 
@@ -39,29 +39,27 @@ async function addFacesIntoCollection (bucketName, folder, collectionId) {
   };  
   console.log(`Adding faces(s3 image file objects) into collection ${collectionId} ....`);
 
-  s3.listObjectsV2(bucketParams, (err, buckObjs) => {
+  let buckObjs = await s3.listObjectsV2(bucketParams).promise();
+  let faceImages = buckObjs.Contents;
+  faceImages.splice(0, 1);
 
-    let faceImages = buckObjs.Contents;
-    faceImages.splice(0, 1);
+  faceImages.forEach((faceImage) => {
+    const params = {
+      CollectionId: collectionId,
+      DetectionAttributes: ["ALL"],
+      ExternalImageId: faceImage.Key.split('/').pop(),
+      Image: { S3Object: { Bucket: bucketName, Name: faceImage.Key } },
+      MaxFaces: 10,
+      QualityFilter: "HIGH"  // change to HIGH may be better
+    };
 
-    faceImages.forEach((faceImage) => {
-      const params = {
-        CollectionId: collectionId,
-        DetectionAttributes: ["ALL"],
-        ExternalImageId: faceImage.Key.split('/').pop(),
-        Image: { S3Object: { Bucket: bucketName, Name: faceImage.Key } },
-        MaxFaces: 10,
-        QualityFilter: "HIGH"  // change to HIGH may be better
-      };
+    rekognition.indexFaces(params, (err, data) => {
+      if (err) console.log(`${faceImage.Key}: indexFaces, ${err}`); // an error occurred
+    // else console.log(`${faceImage.Key}: Face is Added into collection`);
+    });
+  }); // foreach
 
-      rekognition.indexFaces(params, (err, data) => {
-        if (err) console.log(`${faceImage.Key}: indexFaces, ${err}`); // an error occurred
-        else console.log(`${faceImage.Key}: Face is Added into collection`);
-      });
-    }); // foreach
-
-  });
-
+  console.log(`Added ${faceImages.length} faces into collection ${collectionId}`);
 }
 
 // NOTE: This is formaer solution which doesn't work
@@ -205,9 +203,7 @@ const getFacesDetails = (faceData) => {
 // Emotions Values: 8 types (except "Unknown")
 // HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
-const s3_video_key = 'sample-0.mp4';
-
-let facesWithDetails = [];
+const s3_video_key = 'sample-1.mp4';  // test video
 
 const videoPreAnalysis = (videoKey) => {
   // await awsServiceStart();
@@ -224,14 +220,20 @@ const videoPreAnalysis = (videoKey) => {
         console.log(status);
         rekognition.getFaceDetection(params, (err, data) => {
           if (!err) {
-            let faces = getFacesDetails(data);   // faces with detail attributes
-            // video.cropFacesFromLocalVideo(faces, videoKey); //comment when test
-            addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID);      
-            // setTimeout(() => {
-            //   getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID);
-            // }, 2000);
-            // need to get facedetail from faceswithdetails by 
 
+            // Step 1: Get all faces extracted with detailed attributes
+            let detailedFaces = getFacesDetails(data);   
+
+            // Step 2: Add all faces into a collection for comparision
+            video.cropFacesFromLocalVideo(detailedFaces, videoKey)//; //comment when test
+            .then(()=>addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID));  
+            
+            // Step 3: Search faces to identify how many unique person
+            setTimeout(() => {
+               getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID, detailedFaces);
+              // Step 4: Get the detailed demographic attributes for individuals
+              // Step 4 is done in getUniqFaceDetails function
+            }, 2000);
           } else {
             console.log(err, err.stack);
           }
