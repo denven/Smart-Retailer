@@ -223,7 +223,8 @@ const videoPreAnalysis = (videoKey) => {
 
             // Step 1: Get all faces extracted with detailed attributes
             let detailedFaces = getFacesDetails(data);  
-            let copyDetailedFaces =  _.map(detailedFaces, _.clone); 
+            // let copyDetailedFaces = JSON.parse(JSON.stringify(detailedFaces));
+            let copyDetailedFaces = _.cloneDeep(detailedFaces);
             console.log(`first`, detailedFaces);
 
             // Step 2: Add all faces into a collection for comparision
@@ -232,7 +233,7 @@ const videoPreAnalysis = (videoKey) => {
             
             // Step 3: Search faces to identify how many unique person
             // setTimeout(() => {
-            .then(() => getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID, copyDetailedFaces));
+            .then(() => getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID, detailedFaces));
               // Step 4: Get the detailed demographic attributes for individuals
               // Step 4 is done in getUniqFaceDetails function
             // }, 2000);
