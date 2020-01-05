@@ -200,49 +200,71 @@ const getFacesDetails = (faceData) => {
   return facesDetails;
 };
 
+
+const getPersonWithDetails = (persons, faceDetails) => {
+
+  let detailedPersons = [];
+  console.log('Target faces pool', faceDetails.length);
+  faceDetails.forEach((face) => {
+
+    for(const person of persons) {
+      if (_.isEqual(face.Face.BoundingBox, person.BoundingBox)) {
+        detailedPersons.push( {
+          Index: person.Index,
+          Timestamp: person.Timestamp,
+          Confidence: person.Confidence,
+          Gender: face.Face.Gender,
+          AgeRange: face.Face.AgeRange,
+          Smile: face.Face.Smile,
+          Emotions: face.Face.Emotions          
+        });
+      }
+    } // for
+
+  });
+
+  console.log(`Unique Persons Detailed Data:`, detailedPersons);
+  return detailedPersons;
+}
+
 // Emotions Values: 8 types (except "Unknown")
 // HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
 const s3_video_key = 'sample-0.mp4';  // test video
 
-const videoPreAnalysis = (videoKey) => {
-  // await awsServiceStart();
+async function videoPreAnalysis (videoKey) {
+
   console.log(`Video Pre-Analyzing: ${videoKey}`);
-  deleteSQSHisMessages(APP_REK_SQS_NAME).then( () => {
+  await deleteSQSHisMessages(APP_REK_SQS_NAME);
+  
+  let task = await startFaceDetection(videoKey);
 
-    startFaceDetection(videoKey).then((task) => {
-
-      // TODO: when total number of faces > 1000 for the long duration videos
-      const params = { JobId: task.JobId, MaxResults: 1000};  
-      console.log(`StartFaceDetection..., JobId: ${task.JobId}`);   
+  // TODO: when total number of faces > 1000 for the long duration videos
+  const params = { JobId: task.JobId, MaxResults: 1000};  
+  console.log(`StartFaceDetection..., JobId: ${task.JobId}`);   
          
-      getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId).then((status) => {
-        console.log(status);
-        rekognition.getFaceDetection(params, (err, data) => {
-          if (!err) {
+  let status = await getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId);  
+  console.log(`Job Status: ${status}`);
 
-            // Step 1: Get all faces extracted with detailed attributes
-            let detailedFaces = getFacesDetails(data);  
-            // let copyDetailedFaces = JSON.parse(JSON.stringify(detailedFaces));
-            let copyDetailedFaces = _.cloneDeep(detailedFaces); // use more memory
+  let data = await rekognition.getFaceDetection(params).promise();
 
-            // Step 2: Add all faces into a collection for comparision
-            video.cropFacesFromLocalVideo(copyDetailedFaces, videoKey)//; //comment when test
-            .then(() => addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID))
-            
-            // Step 3: Search faces to identify how many unique person
-            // setTimeout(() => {
-            .then(() => getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID, detailedFaces));
-              // Step 4: Get the detailed demographic attributes for individuals
-              // Step 4 is done in getUniqFaceDetails function
-            // }, 2000);
-          } else {
-            console.log(err, err.stack);
-          }
-        });
-      });
-    }).catch((err) => console.log("Failed to detect faces in video on S3:", err.stack));
-  });
+  // Step 1: Get all faces extracted with detailed attributes
+  let detailedFaces = getFacesDetails(data);  
+
+  // let copyDetailedFaces = JSON.parse(JSON.stringify(detailedFaces));
+  let copyDetailedFaces = _.cloneDeep(detailedFaces); // use more memory
+
+  // Step 2: Add all faces into a collection for comparision
+  await video.cropFacesFromLocalVideo(copyDetailedFaces, videoKey); //comment when test
+  await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID);
+  
+  // Step 3: Search faces to identify how many unique person
+  let persons = await getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID, detailedFaces);
+
+  // Step 4: Get the detailed demographic attributes for individuals
+  let personsWithDetails = getPersonWithDetails(persons, detailedFaces);
+
+  // Step 5: Write into database
 
 };
 
