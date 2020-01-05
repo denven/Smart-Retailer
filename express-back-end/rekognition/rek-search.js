@@ -89,7 +89,6 @@ const getFaceSearch = (jobId) => {
         if(!err) {
           persons = getPersonsInVideo(data);
           console.log(`Recognized ${persons.length} persons in video ${s3_video_key}`);
-          console.log(persons);
 
           nextToken = data.NextToken || '';
           resolve(persons);
@@ -104,34 +103,8 @@ const getFaceSearch = (jobId) => {
 
 }
 
-const getPersonWithDetails = (persons, faceDetails) => {
-
-  let detailedPersons = [];
-  console.log('Target faces pool', faceDetails.length);
-  faceDetails.forEach((face) => {
-
-    for(const person of persons) {
-      if (_.isEqual(face.Face.BoundingBox, person.BoundingBox)) {
-        detailedPersons.push( {
-          Index: person.Index,
-          Timestamp: person.Timestamp,
-          Confidence: person.Confidence,
-          Gender: face.Face.Gender,
-          AgeRange: face.Face.AgeRange,
-          Smile: face.Face.Smile,
-          Emotions: face.Face.Emotions          
-        });
-      }
-    } // for
-
-  });
-
-  console.log(`Unique Persons Detailed Data:`, detailedPersons);
-  return detailedPersons;
-}
-
 // entry function for call api startFaceSearch
-async function getUniqFaceDetails (videoKey, collectionId, facesDetails) {
+async function getPersonUniqFace (videoKey, collectionId) {
 
   await deleteSQSHisMessages(APP_REK_SQS_NAME);
 
@@ -143,9 +116,7 @@ async function getUniqFaceDetails (videoKey, collectionId, facesDetails) {
   
   let persons = await getFaceSearch(task.JobId); // this is async 
 
-  let detailedPersons = getPersonWithDetails(persons, facesDetails);
-
-  return detailedPersons;  
+  return persons;  
 
   // deleteSQSHisMessages(APP_REK_SQS_NAME).then( () => { 
   //   // start a new task when SQS is empty
@@ -171,4 +142,4 @@ async function getUniqFaceDetails (videoKey, collectionId, facesDetails) {
 // getFaceSearch('aba023ce3b8f0a20159273908708be5fc350f65aed2ecf2e2c370ae51a29d1a9');
 
 
-module.exports = { getUniqFaceDetails };
+module.exports = { getPersonUniqFace };

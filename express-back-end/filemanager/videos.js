@@ -94,24 +94,19 @@ const cropFacesFromScreenshots = (faces, videoFileName) => {
 async function cropFacesFromLocalVideo (allFrames, videoFileName) {
 
   prepareDataDirectories();
-  Promise.all(takeScreenshots(allFrames, videoFileName))
-  .then( (frames) => {
-    console.log(`Extracted ${frames.length} frames from video ${videoFileName}`);
-    return Promise.all(cropFacesFromScreenshots(allFrames, videoFileName))
-  })
-  .then((faces) => {
-      console.log(`Cropped ${faces.length} faces from video ${videoFileName}, Done!`);
-      const faceImgPath = path.join(__dirname, 'Faces', videoFileName);
-      // let faces_bucket = s3Client.createFolderInBucket(videoFileName, APP_FACES_BUCKET_NAME);
-      // setTimeout( () => {
-      //   s3Client.uploadMultiFiles(faceImgPath, APP_FACES_BUCKET_NAME, videoFileName)
-      //   .then((data) => console.log(`Uploaded ${data.length} face images to s3 successfully.`))
-      //   .catch((err) => console.log(err));
-      // }, 1000);
-      return 'done!'
-  })
-  .catch(err => console.log(err.stack))
-  .catch((err) => console.log(err));
+
+  let frames = await Promise.all(takeScreenshots(allFrames, videoFileName));
+  console.log(`Extracted ${frames.length} frames from video ${videoFileName}`);
+
+  let faces = await Promise.all(cropFacesFromScreenshots(allFrames, videoFileName));  
+  console.log(`Cropped ${faces.length} faces from video ${videoFileName}, Done!`);
+  const faceImgPath = path.join(__dirname, 'Faces', videoFileName);
+  let faces_bucket = await s3Client.createFolderInBucket(videoFileName, APP_FACES_BUCKET_NAME);
+  
+  s3Client.uploadMultiFiles(faceImgPath, APP_FACES_BUCKET_NAME, videoFileName)
+  .then((data) => console.log(`Uploaded ${data.length} face images to s3 successfully.`))
+  .catch((err) => console.log(err));  
+      
 }
 
 // tests

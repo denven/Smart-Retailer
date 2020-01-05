@@ -5,7 +5,7 @@ const { s3, rekognition,
   APP_REK_TEMP_COLLECTION_ID, BUCKET_MAX_KEYS, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
 
-const { getUniqFaceDetails } = require('./rek-search');
+const { getPersonUniqFace } = require('./rek-search');
 
 const video = require('../filemanager/videos');
 
@@ -230,7 +230,7 @@ const getPersonWithDetails = (persons, faceDetails) => {
 // Emotions Values: 8 types (except "Unknown")
 // HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
-const s3_video_key = 'sample-0.mp4';  // test video
+const s3_video_key = 'sample-3.mp4';  // test video
 
 async function videoPreAnalysis (videoKey) {
 
@@ -258,8 +258,8 @@ async function videoPreAnalysis (videoKey) {
   await video.cropFacesFromLocalVideo(copyDetailedFaces, videoKey); //comment when test
   await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID);
   
-  // Step 3: Search faces to identify how many unique person
-  let persons = await getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID, detailedFaces);
+  // Step 3: Search faces and obtain a only uniq face for each person
+  let persons = await getPersonUniqFace(videoKey, APP_REK_TEMP_COLLECTION_ID);
 
   // Step 4: Get the detailed demographic attributes for individuals
   let personsWithDetails = getPersonWithDetails(persons, detailedFaces);
