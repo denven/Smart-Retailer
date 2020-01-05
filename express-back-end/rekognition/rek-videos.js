@@ -224,8 +224,7 @@ const videoPreAnalysis = (videoKey) => {
             // Step 1: Get all faces extracted with detailed attributes
             let detailedFaces = getFacesDetails(data);  
             // let copyDetailedFaces = JSON.parse(JSON.stringify(detailedFaces));
-            let copyDetailedFaces = _.cloneDeep(detailedFaces);
-            console.log(`first`, detailedFaces);
+            let copyDetailedFaces = _.cloneDeep(detailedFaces); // use more memory
 
             // Step 2: Add all faces into a collection for comparision
             video.cropFacesFromLocalVideo(copyDetailedFaces, videoKey)//; //comment when test

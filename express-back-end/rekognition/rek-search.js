@@ -40,44 +40,22 @@ const startFaceSearch = (videoKey, collectionId) => {
 
 };
 
-// Note: There is no faceId in this returned data.
-const getFacesDetails = (faceData) => {
-
-  // All attributes of faces are below, we only care about demographic realted ones
-  // "Face": { "Confidence", "Eyeglasses", "Sunglasses", "Gender", "Landmarks",
-  //           "Pose", "Emotions", "AgeRange", "EyesOpen", "BoundingBox", "Smile",
-  //           "MouthOpen", "Quality", "Mustache", "Beard" }
-  
-  let facesDetails = [];
-
-  for (const face of faceData.Faces) {
-    let newFace = {
-      "Timestamp": face.Timestamp,
-      "Face": _.pick(face.Face, "Confidence", "Gender", "Emotions", "AgeRange", "BoundingBox", "Smile")
-    };
-    facesDetails.push(newFace);
-  }
-  return facesDetails;
-};
-
 // Emotions Values: 8 types (except "Unknown")
 // HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
 const s3_video_key = 'sample-1.mp4';
-const video_path = '/home/chengwen/lighthouse/final/Demo/Videos/sample-1.mp4';
 
+// Pick 1 face data for each person 
 const getPersonsInVideo = (data) => {
   
   let oldIndex = -1;
   let allPersons = [];  
   let person = {};
 
-  console.log(`Get ${data.Persons.length} faces data`)
+  console.log(`Get ${data.Persons.length} faces data by searchFaces in collection`)
   for (const item of data.Persons) {   
     
     if(item.Person.Index !== oldIndex) { 
-      console.log(item.Person.Index);
-
       if(oldIndex >= 0) {
         let newObj = JSON.parse(JSON.stringify(person));
         allPersons.push(newObj);  //record a person
@@ -93,7 +71,6 @@ const getPersonsInVideo = (data) => {
   }
 
   allPersons.push(person); //last person
-  console.log(allPersons);
   return allPersons;
 
 };
@@ -112,6 +89,8 @@ const getFaceSearch = (jobId) => {
         if(!err) {
           persons = getPersonsInVideo(data);
           console.log(`Recognized ${persons.length} persons in video ${s3_video_key}`);
+          console.log(persons);
+
           nextToken = data.NextToken || '';
           resolve(persons);
         } else {
@@ -125,19 +104,48 @@ const getFaceSearch = (jobId) => {
 
 }
 
+const getPersonWithDetails = (persons, faceDetails) => {
+
+  let detailedPersons = [];
+  console.log('Target faces pool', faceDetails.length);
+  faceDetails.forEach((face) => {
+
+    for(const person of persons) {
+      if (_.isEqual(face.Face.BoundingBox, person.BoundingBox)) {
+        detailedPersons.push( {
+          Index: person.Index,
+          Timestamp: person.Timestamp,
+          Confidence: person.Confidence,
+          Gender: face.Face.Gender,
+          AgeRange: face.Face.AgeRange,
+          Smile: face.Face.Smile,
+          Emotions: face.Face.Emotions          
+        });
+      }
+    } // for
+
+  });
+
+  console.log(`Unique Persons Detailed Data:`, detailedPersons);
+  return detailedPersons;
+}
+
 // entry function for call api startFaceSearch
-async function getUniqFaceDetails (videoKey, collectionId) {
-   
-  deleteSQSHisMessages(APP_REK_SQS_NAME)
-  .then( () => { return startFaceSearch(videoKey, collectionId); })
-  .then((task) => {
-    console.log(`StartFaceSearch..., JobId: ${task.JobId}`);   
-    getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId).then((status) => {
-      console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query`);
-      return getFaceSearch(task.JobId); // this is async 
-    }).then((data) => console.log(data));
-  })
-  .catch((err) => console.log("Failed to track persons in video on S3:", err.stack));
+async function getUniqFaceDetails (videoKey, collectionId, facesDetails) {
+
+  await deleteSQSHisMessages(APP_REK_SQS_NAME);
+
+  let task = await startFaceSearch(videoKey, collectionId);
+  console.log(`StartFaceSearch..., JobId: ${task.JobId}`);   
+
+  let status = await getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId);
+  console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query`);
+  
+  let persons = await getFaceSearch(task.JobId); // this is async 
+
+  let detailedPersons = getPersonWithDetails(persons, facesDetails);
+
+  return detailedPersons;  
 
   // deleteSQSHisMessages(APP_REK_SQS_NAME).then( () => { 
   //   // start a new task when SQS is empty
@@ -161,5 +169,6 @@ async function getUniqFaceDetails (videoKey, collectionId) {
 
 // getUniqFaceDetails(s3_video_key, APP_REK_TEMP_COLLECTION_ID);
 // getFaceSearch('aba023ce3b8f0a20159273908708be5fc350f65aed2ecf2e2c370ae51a29d1a9');
+
 
 module.exports = { getUniqFaceDetails };
