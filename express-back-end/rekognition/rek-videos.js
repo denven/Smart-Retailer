@@ -1,6 +1,6 @@
 const _ = require('lodash');
 
-const {s3, rekognition,
+const { s3, rekognition,
   APP_VIDEO_BUCKET_NAME, APP_FACES_BUCKET_NAME, APP_REK_SQS_NAME,
   APP_REK_TEMP_COLLECTION_ID, BUCKET_MAX_KEYS, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
@@ -29,18 +29,26 @@ const keepUniqFaceInCollection = (matchedFaces, collectionId) => {
  
 //NOTE: This is the current solution by adding all faces into collection
 //      Donot need to do the comparision before addint indexes
-async function addFacesIntoCollection (bucketName, collectionId) {
+async function addFacesIntoCollection (bucketName, folder, collectionId) {
 
-  const bucketParams = { Bucket: bucketName, MaxKeys: BUCKET_MAX_KEYS };  
-  console.log("Adding objects into index ....", bucketName);
+  const bucketParams = { 
+    Bucket: bucketName,  /* required */
+    Delimiter: '/',
+    Prefix: folder + '/',  //your folder name
+    MaxKeys: BUCKET_MAX_KEYS 
+  };  
+  console.log(`Adding faces(s3 image file objects) into collection ${collectionId} ....`);
 
-  s3.listObjects(bucketParams, (err, buckObjs) => {
+  s3.listObjectsV2(bucketParams, (err, buckObjs) => {
 
-    buckObjs.Contents.forEach((faceImage) => {
+    let faceImages = buckObjs.Contents;
+    faceImages.splice(0, 1);
+
+    faceImages.forEach((faceImage) => {
       const params = {
         CollectionId: collectionId,
         DetectionAttributes: ["ALL"],
-        ExternalImageId: faceImage.Key,
+        ExternalImageId: faceImage.Key.split('/').pop(),
         Image: { S3Object: { Bucket: bucketName, Name: faceImage.Key } },
         MaxFaces: 10,
         QualityFilter: "HIGH"  // change to HIGH may be better
@@ -48,7 +56,7 @@ async function addFacesIntoCollection (bucketName, collectionId) {
 
       rekognition.indexFaces(params, (err, data) => {
         if (err) console.log(`${faceImage.Key}: indexFaces, ${err}`); // an error occurred
-        // else console.log(`${faceImage.Key}: Added face into collection`);
+        else console.log(`${faceImage.Key}: Face is Added into collection`);
       });
     }); // foreach
 
@@ -197,13 +205,13 @@ const getFacesDetails = (faceData) => {
 // Emotions Values: 8 types (except "Unknown")
 // HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
-const s3_video_key = 'sample-1.mp4';
-const video_path = '/home/chengwen/lighthouse/final/Demo/Videos/sample-1.mp4';
+const s3_video_key = 'sample-0.mp4';
 
 let facesWithDetails = [];
 
 const videoPreAnalysis = (videoKey) => {
   // await awsServiceStart();
+  console.log(`Video Pre-Analyzing: ${videoKey}`);
   deleteSQSHisMessages(APP_REK_SQS_NAME).then( () => {
 
     startFaceDetection(videoKey).then((task) => {
@@ -213,14 +221,15 @@ const videoPreAnalysis = (videoKey) => {
       console.log(`StartFaceDetection..., JobId: ${task.JobId}`);   
          
       getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId).then((status) => {
+        console.log(status);
         rekognition.getFaceDetection(params, (err, data) => {
           if (!err) {
             let faces = getFacesDetails(data);   // faces with detail attributes
-            // video.cropFacesFromLocalVideo(facesWithDetails, video_path); //comment when test
-            addFacesIntoCollection(APP_FACES_BUCKET_NAME, APP_REK_TEMP_COLLECTION_ID);      
-            setTimeout(() => {
-              getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID);
-            }, 2000);
+            // video.cropFacesFromLocalVideo(faces, videoKey); //comment when test
+            addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID);      
+            // setTimeout(() => {
+            //   getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID);
+            // }, 2000);
             // need to get facedetail from faceswithdetails by 
 
           } else {
