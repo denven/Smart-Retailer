@@ -68,14 +68,18 @@ const uploadMultiFiles = (imagesPath, targetBucket, bucketFolder) => {
 }
 
 // create one folder for each video file in the faces root bucket
-const createFolderInBucket = (videoName, targetBucket) => {
+async function createFolderInBucket(videoName, targetBucket) {
 
   const bucketFolder = targetBucket + '/' + videoName;
   const params = {Bucket: targetBucket, Key: videoName + '/', ACL: 'public-read', Body: videoName};
 
-  s3Client.upload(params).promise()
-  .then((data) => console.log(`Folder Created Successfully on S3: ${data.Location}`))
-  .catch((err) => console.log(`Error creating the folder: ${err}`));
+  try{
+    let data = await s3Client.upload(params).promise(); 
+    if(data) console.log(`Folder Created Successfully on S3: ${data.Location}`);
+  }catch(error){
+        console.log('输了' + error)
+    console.log(`Error creating the folder: ${err}`);
+  }
 
   return bucketFolder;
 }
