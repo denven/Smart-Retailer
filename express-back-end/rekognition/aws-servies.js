@@ -11,7 +11,7 @@ const APP_REK_SQS_NAME = 'Rekognition';
 const APP_REK_DB_COLLECTION_ID = 'faces-db';
 const APP_REK_TEMP_COLLECTION_ID = 'transition';
 
-const BUCKET_MAX_KEYS = 100;
+const BUCKET_MAX_KEYS = 1000;
 
 // NOTE: The following two lines cannot take effect when requiring them from other js files
 // const APP_ROLE_ARN = process.env.ROLE_ARN;
@@ -125,9 +125,13 @@ async function deleteSQSHisMessages(queName) {
     WaitTimeSeconds: 20     // test timeout
   };
 
+  console.log('Checking history SQS messages...');
   await sqs.receiveMessage(params).promise().then((data) => {
+
     return new Promise ((resolve, reject) => {
+
       if(data.Messages) {
+        
         console.log(`Found ${data.Messages.length} history messages in SQS`); 
       
         let msgEntries = []; 
@@ -145,8 +149,9 @@ async function deleteSQSHisMessages(queName) {
             resolve('DELETED');
           }
         }); 
+
       } else {   
-         resolve(`No message found`);
+         resolve(`No history messages found in SQS`);
       } 
      });
   })
@@ -187,6 +192,7 @@ async function getSQSMessageSuccess(queName, jobId) {
                 console.log(`Rekognition JobStatus Query: ${msgContent.Status}! JobId: ${jobId}`);
                 msgFound = true;
               } else {
+                console.log(`Rekognition JobStatus Query: ${msgContent.Status}, continuing... JobId: ${jobId}`);
                 msgFound = (async() => await getSQSMessageSuccess(queName, jobId))();
               }
             }
@@ -199,7 +205,7 @@ async function getSQSMessageSuccess(queName, jobId) {
     }).catch((err) => { 
       console.log("SQS Receive Error:", err); 
     });
-
+    
     return msgFound;
 
   // });  

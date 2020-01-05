@@ -1,5 +1,6 @@
 // This module will use large memory and the analysis is time consuming
 // no faces collection needed when processing
+// test data: 16s duration video analysis needs 120s, 23s video needs 180s
 
 const { rekognition, APP_VIDEO_BUCKET_NAME, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   APP_REK_SQS_NAME, deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
@@ -69,7 +70,7 @@ const getPersonsInVideo = (allPersonsData) => {
 
 };
 
-const s3_video_key = 'sample-3.mp4';
+const s3_video_key = 'sample-1.mp4';
 const video_local_path = '/home/chengwen/lighthouse/final/Demo/Videos/sample-.mp4';
 
 const getPersonsTracking = (jobId) => {
@@ -110,11 +111,12 @@ const startPersonTrackingAnalysis = (s3_video_key) => {
     // start a new task when SQS is empty
     startPersonTracking(s3_video_key).then((task) => {
 
-      console.log(`StartPersonTracking..., JobId: ${task.JobId}`);   
+      console.log(`StartPersonTracking... for video ${s3_video_key}, JobId: ${task.JobId}`);   
       getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId)
-      .then(() => {
+      .then((status) => {
+        console.log(status);
         let allPerons = getPersonsTracking(task.JobId);
-        getVideoTraffic(allPerons);
+        // getVideoTraffic(allPerons);  //TODO:
       });
 
     }).catch((err) => console.log("Failed to track persons in video on S3:", err.stack));
@@ -125,7 +127,7 @@ const startPersonTrackingAnalysis = (s3_video_key) => {
 
 // test code
 // startPersonTrackingAnalysis(s3_video_key);
-getPersonsTracking('ed96bc196e712dbe28df2cc6d87a2739c369165d3a52e9c86f68c4db20360e82');
+// getPersonsTracking('ed96bc196e712dbe28df2cc6d87a2739c369165d3a52e9c86f68c4db20360e82');
 
 module.exports = {
   startPersonTrackingAnalysis
