@@ -203,7 +203,7 @@ const getFacesDetails = (faceData) => {
 // Emotions Values: 8 types (except "Unknown")
 // HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
-const s3_video_key = 'sample-1.mp4';  // test video
+const s3_video_key = 'sample-0.mp4';  // test video
 
 const videoPreAnalysis = (videoKey) => {
   // await awsServiceStart();
@@ -222,18 +222,20 @@ const videoPreAnalysis = (videoKey) => {
           if (!err) {
 
             // Step 1: Get all faces extracted with detailed attributes
-            let detailedFaces = getFacesDetails(data);   
+            let detailedFaces = getFacesDetails(data);  
+            let copyDetailedFaces =  _.map(detailedFaces, _.clone); 
+            console.log(`first`, detailedFaces);
 
             // Step 2: Add all faces into a collection for comparision
-            video.cropFacesFromLocalVideo(detailedFaces, videoKey)//; //comment when test
-            .then(()=>addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID));  
+            video.cropFacesFromLocalVideo(copyDetailedFaces, videoKey)//; //comment when test
+            .then(() => addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID))
             
             // Step 3: Search faces to identify how many unique person
-            setTimeout(() => {
-               getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID, detailedFaces);
+            // setTimeout(() => {
+            .then(() => getUniqFaceDetails(videoKey, APP_REK_TEMP_COLLECTION_ID, copyDetailedFaces));
               // Step 4: Get the detailed demographic attributes for individuals
               // Step 4 is done in getUniqFaceDetails function
-            }, 2000);
+            // }, 2000);
           } else {
             console.log(err, err.stack);
           }
