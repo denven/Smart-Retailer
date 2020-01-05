@@ -21,12 +21,14 @@ const prepareDataDirectories = () => {
 }
 
 // Take screentshots for all the frames which is detected with faces
+// and Save the frame images into a folder named by filename in 'Frames' folder
 const takeScreenshots = (frames, videoFileName) => {
 
   let oldTimestamp = -1;
   let framesPromises = [];
 
-  const frameImgPath = path.join(__dirname, 'Frames', '2019-12-30');
+  const frameImgPath = path.join(__dirname, 'Frames', videoFileName);
+  const videoFullName = path.join(__dirname, 'Videos', videoFileName);
   shell.mkdir(frameImgPath);
 
   for(const frame of frames) {
@@ -35,7 +37,7 @@ const takeScreenshots = (frames, videoFileName) => {
     if (oldTimestamp !== newTimestamp) {  // take screenshot for different frames
       oldTimestamp = newTimestamp; 
       let promise = new Promise((resolve, reject) => {
-        ffmpeg(videoFileName)
+        ffmpeg(videoFullName)
           .on('error', (err) => reject(err))
           .on('end', (data) => resolve(data))
           .screenshots({
@@ -53,13 +55,15 @@ const takeScreenshots = (frames, videoFileName) => {
 }
 
 // Crop all the faces from different frames
+// and save the images into a folder named by video filename in 'Faces' folder
 const cropFacesFromScreenshots = (faces, videoFileName) => {
 
     let oldTimestamp = -1;
-    let sequence = 1;   // No. of face detected in the frame starts from 1
-     
-    const faceImgPath = path.join(__dirname, 'Faces', '2019-12-30');
-    const frameImgPath = path.join(__dirname, 'Frames', '2019-12-30');
+    let sequence = 0;   // No. of face detected in the frame starts from 1
+    console.log(`how many faces will be cropped: ${faces.length}`);
+
+    const faceImgPath = path.join(__dirname, 'Faces', videoFileName);
+    const frameImgPath = path.join(__dirname, 'Frames', videoFileName);
     shell.mkdir(faceImgPath);
 
     return faces.map((frame) => {
@@ -70,7 +74,7 @@ const cropFacesFromScreenshots = (faces, videoFileName) => {
       let newTimestamp = frame.Timestamp;
       if (oldTimestamp !== newTimestamp) {  // same frame
         oldTimestamp = newTimestamp; 
-        sequence = 1;
+        sequence = 0;  // reset
       }
 
       sequence++;  // count of face in one frame
@@ -85,26 +89,28 @@ const cropFacesFromScreenshots = (faces, videoFileName) => {
 }
 
 // As there are many async operations, we make this function to make it more synchronously!
-// after the croping job, upload all the faces images into s3 buckets 
-const cropFacesFromLocalVideo = (faces, videoFileName) => {
+// upload all the faces images into s3 buckets after the croping job is done 
+// There are 3 frames per second on average from the test video, the number depends on movements in vides
+async function cropFacesFromLocalVideo (allFrames, videoFileName) {
 
   prepareDataDirectories();
-  Promise.all(takeScreenshots(faces, videoFileName))
+  Promise.all(takeScreenshots(allFrames, videoFileName))
   .then( (frames) => {
     console.log(`Extracted ${frames.length} frames from video ${videoFileName}`);
-    Promise.all(cropFacesFromScreenshots(faces, videoFileName))
-    .then(data => {
-      console.log(`Cropped ${data.length} faces from video ${videoFileName}, Done!`);
-      const faceImgPath = path.join(__dirname, 'Faces', '2019-12-30');
-      let faces_bucket = s3Client.createFolderInBucket('2019-12-30', "retailer-faces");
-      setTimeout( () => {
-        s3Client.uploadMultiFiles(faceImgPath, faces_bucket)
-        .then((data) => console.log(`Uploaded ${data.length} face images to ${faces_bucket} successfully.`))
-        .catch((err) => console.log(err));
-      },1000);
-    })
-    .catch(err => console.log(err.stack));
+    return Promise.all(cropFacesFromScreenshots(allFrames, videoFileName))
   })
+  .then((faces) => {
+      console.log(`Cropped ${faces.length} faces from video ${videoFileName}, Done!`);
+      const faceImgPath = path.join(__dirname, 'Faces', videoFileName);
+      // let faces_bucket = s3Client.createFolderInBucket(videoFileName, APP_FACES_BUCKET_NAME);
+      // setTimeout( () => {
+      //   s3Client.uploadMultiFiles(faceImgPath, APP_FACES_BUCKET_NAME, videoFileName)
+      //   .then((data) => console.log(`Uploaded ${data.length} face images to s3 successfully.`))
+      //   .catch((err) => console.log(err));
+      // }, 1000);
+      return 'done!'
+  })
+  .catch(err => console.log(err.stack))
   .catch((err) => console.log(err));
 }
 
@@ -112,7 +118,8 @@ const cropFacesFromLocalVideo = (faces, videoFileName) => {
 // let faces = require('./allFaces.json');
 // console.log(faces.Faces.length);
 // console.time('New image crop');
-// cropFacesFromLocalVideo(faces, '/home/chengwen/lighthouse/final/Demo/Videos/sample-1.mp4');
+// cropFacesFromLocalVideo(faces, 'sample-1.mp4');
+// console.log('done');
 
 
 module.exports = { cropFacesFromLocalVideo };

@@ -135,7 +135,7 @@ async function getUniqFaceDetails (videoKey, collectionId) {
     getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId).then((status) => {
       console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query`);
       return getFaceSearch(task.JobId); // this is async 
-    }); //.then((data) => console.log(data))
+    }).then((data) => console.log(data));
   })
   .catch((err) => console.log("Failed to track persons in video on S3:", err.stack));
 
