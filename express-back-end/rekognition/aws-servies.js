@@ -13,8 +13,11 @@ const APP_REK_TEMP_COLLECTION_ID = 'transition';
 
 const BUCKET_MAX_KEYS = 100;
 
-const APP_ROLE_ARN = process.env.ROLE_ARN;
-const APP_SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
+// NOTE: The following two lines cannot take effect when requiring them from other js files
+// const APP_ROLE_ARN = process.env.ROLE_ARN;
+// const APP_SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
+const APP_ROLE_ARN = 'arn:aws:iam::137668631249:role/Rekognition_Final'
+const APP_SNS_TOPIC_ARN ='arn:aws:sns:us-west-2:137668631249:AmazonRekognition-Final'
 
 let sqsQueueUrl = null;   
 
@@ -143,7 +146,7 @@ async function deleteSQSHisMessages(queName) {
           }
         }); 
       } else {   
-         reject(`No message found`);
+         resolve(`No message found`);
       } 
      });
   })
@@ -181,7 +184,7 @@ async function getSQSMessageSuccess(queName, jobId) {
             const msgContent = JSON.parse(JSON.parse(msg.Body).Message);
             if (msgContent.JobId === jobId) {
               if (msgContent.Status === 'SUCCEEDED') {
-                console.log(`Rekognition Job Query result: ${msgContent.Status}! JobId: ${jobId}`);
+                console.log(`Rekognition JobStatus Query: ${msgContent.Status}! JobId: ${jobId}`);
                 msgFound = true;
               } else {
                 msgFound = (async() => await getSQSMessageSuccess(queName, jobId))();
@@ -189,7 +192,7 @@ async function getSQSMessageSuccess(queName, jobId) {
             }
           } // end of for  
         } else {
-          console.log(`Timeout, failed to get msg in ${params.WaitTimeSeconds} seconds from sqs, try another time...`);
+          console.log(`Timeout, failed to get JobStatus msg in ${params.WaitTimeSeconds} seconds from SQS, try another time...`);
           msgFound = (async() => await getSQSMessageSuccess(queName, jobId))();
         }
       // }); // promise
