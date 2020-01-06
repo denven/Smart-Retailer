@@ -3,10 +3,9 @@ import axios from 'axios';
 import './App.css';
 import ReactDOM from 'react-dom';
 import { makeStyles } from '@material-ui/core/styles';
-
-import VerticalTabs from './components/Siderbar';
+import VerticalTabs from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
-
+import Statistics from './components/Statistics';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -22,7 +21,7 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      message: 'Click the button to load data!'
+      message: 'Click the button to load data!',
     }
   }
   
@@ -44,7 +43,7 @@ class App extends Component {
       <>
         <div className='container'>
           <VerticalTabs/>
-          <Dashboard/>
+          <Statistics/>
         </div>
       </>
     );

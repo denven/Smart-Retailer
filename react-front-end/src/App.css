@@ -5,7 +5,9 @@
 .container {
   display: flex;
   flex-direction: row;
+  height: 800px
 }
 .sidebar {
   order: 1
 }
+
