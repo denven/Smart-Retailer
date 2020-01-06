@@ -2,7 +2,8 @@ const _ = require('lodash');
 
 const { s3, rekognition,
   APP_VIDEO_BUCKET_NAME, APP_FACES_BUCKET_NAME, APP_REK_SQS_NAME,
-  APP_REK_TEMP_COLLECTION_ID, BUCKET_MAX_KEYS, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
+  APP_REK_TEMP_COLLECTION_ID, APP_REK_DB_COLLECTION_ID, BUCKET_MAX_KEYS, 
+  APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
 
 const { getPersonUniqFace } = require('./rek-search');
@@ -26,6 +27,20 @@ const keepUniqFaceInCollection = (matchedFaces, collectionId) => {
   }
 }
  
+// This function is used to delete and create the collection by a collection ID
+// This makes it easier to empty an collection other than deleting all the faces
+// in the collection as all faceIds should be found and passed into deletFaces()
+async function rebuildCollection (id) {
+
+  try {
+    await rekognition.deleteCollection( { CollectionId: id } ).promise();
+    await rekognition.createCollection( { CollectionId: id } ).promise();
+    console.log(`Created a temporary collection \"${id}\" for analyzing demographic information`);
+  } catch (error) {
+    console.log(`Failed to Create the temporary collection, ${error.name} ${error.message}`);
+  }
+
+}
  
 //NOTE: This is the current solution by adding all faces into collection
 //      Donot need to do the comparision before addint indexes
@@ -209,13 +224,19 @@ const getPersonWithDetails = (persons, faceDetails) => {
     for(const person of persons) {
       if (_.isEqual(face.Face.BoundingBox, person.BoundingBox)) {
         detailedPersons.push( {
+          // the person.attributes below come from searchFaces in collection
           Index: person.Index,
           Timestamp: person.Timestamp,
+          ExternalImageId: person.ExternalImageId,
+          FaceId: person.FaceId,
+          ImageId: person.ImageId,
           Confidence: person.Confidence,
+
+          // the face.attributes below come from faceDetection(no collection compared)
           Gender: face.Face.Gender.Value,
           AgeRange: face.Face.AgeRange,
-          Smile: face.Face.Smile,
-          Emotions: face.Face.Emotions          
+          Smile: face.Face.Smile.Value,
+          Emotions: face.Face.Emotions,
         });
       }
     } // for
@@ -229,7 +250,7 @@ const getPersonWithDetails = (persons, faceDetails) => {
 // Emotions Values: 8 types (except "Unknown")
 // HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
-const s3_video_key = 'sample-3.mp4';  // test video
+const s3_video_key = 'sample-0.mp4';  // test video
 
 async function videoPreAnalysis (videoKey) {
 
@@ -247,7 +268,7 @@ async function videoPreAnalysis (videoKey) {
 
   let data = await rekognition.getFaceDetection(params).promise();
 
-  // Step 1: Get all faces extracted with detailed attributes
+  // Step 1: Get all faces extracted with all detailed attributes
   let detailedFaces = getFacesDetails(data);  
 
   // let copyDetailedFaces = JSON.parse(JSON.stringify(detailedFaces));
@@ -255,7 +276,9 @@ async function videoPreAnalysis (videoKey) {
 
   // Step 2: Add all faces into a collection for comparision
   await video.cropFacesFromLocalVideo(copyDetailedFaces, videoKey); //comment when test
+  await rebuildCollection(APP_REK_TEMP_COLLECTION_ID);
   await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID);
+  await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_DB_COLLECTION_ID);
   
   // Step 3: Search faces and obtain a only uniq face for each person
   let persons = await getPersonUniqFace(videoKey, APP_REK_TEMP_COLLECTION_ID);
