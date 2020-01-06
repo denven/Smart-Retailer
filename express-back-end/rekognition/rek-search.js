@@ -65,7 +65,10 @@ const getPersonsInVideo = (data) => {
         "Timestamp": item.Timestamp,
         "Index": item.Person.Index,
         "BoundingBox": item.Person.Face.BoundingBox,
-        "Confidence": item.Person.Face.Confidence
+        "Confidence": item.Person.Face.Confidence,
+        "ExternalImageId": item.FaceMatches[0].ExternalImageId,
+        "FaceId": item.FaceMatches[0].FaceId,
+        "ImageId": item.FaceMatches[0].ImageId
       };
     }
   }

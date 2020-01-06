@@ -203,7 +203,7 @@ const getFacesDetails = (faceData) => {
 const getPersonWithDetails = (persons, faceDetails) => {
 
   let detailedPersons = [];
-  console.log('Target faces in the pool:', faceDetails.length);
+  console.log('Target faces for comparision in collection pool:', faceDetails.length);
   faceDetails.forEach((face) => {
 
     for(const person of persons) {
@@ -264,6 +264,9 @@ async function videoPreAnalysis (videoKey) {
   let personsWithDetails = getPersonWithDetails(persons, detailedFaces);
 
   // Step 5: Write into database
+
+
+  // Step 6: Cleanup
 
 };
 
