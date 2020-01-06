@@ -37,13 +37,14 @@ async function addFacesIntoCollection (bucketName, folder, collectionId) {
     Prefix: folder + '/',  //your folder name
     MaxKeys: BUCKET_MAX_KEYS 
   };  
+
   console.log(`Adding faces(s3 image file objects) into collection ${collectionId} ....`);
 
   let buckObjs = await s3.listObjectsV2(bucketParams).promise();
   let faceImages = buckObjs.Contents;
   faceImages.splice(0, 1);
 
-  faceImages.forEach((faceImage) => {
+  let faceIndexPromises =faceImages.map((faceImage) => {
     const params = {
       CollectionId: collectionId,
       DetectionAttributes: ["ALL"],
@@ -53,13 +54,11 @@ async function addFacesIntoCollection (bucketName, folder, collectionId) {
       QualityFilter: "HIGH"  // change to HIGH may be better
     };
 
-    rekognition.indexFaces(params, (err, data) => {
-      if (err) console.log(`${faceImage.Key}: indexFaces, ${err}`); // an error occurred
-    // else console.log(`${faceImage.Key}: Face is Added into collection`);
-    });
-  }); // foreach
+    return rekognition.indexFaces(params).promise();   
+  });
 
-  console.log(`Added ${faceImages.length} faces into collection ${collectionId}`);
+  let addRetData = await Promise.all(faceIndexPromises);
+  console.log(`Added ${addRetData.length} faces into collection \"${collectionId}\"`);
 }
 
 // NOTE: This is formaer solution which doesn't work
@@ -204,7 +203,7 @@ const getFacesDetails = (faceData) => {
 const getPersonWithDetails = (persons, faceDetails) => {
 
   let detailedPersons = [];
-  console.log('Target faces pool', faceDetails.length);
+  console.log('Target faces in the pool:', faceDetails.length);
   faceDetails.forEach((face) => {
 
     for(const person of persons) {
@@ -213,7 +212,7 @@ const getPersonWithDetails = (persons, faceDetails) => {
           Index: person.Index,
           Timestamp: person.Timestamp,
           Confidence: person.Confidence,
-          Gender: face.Face.Gender,
+          Gender: face.Face.Gender.Value,
           AgeRange: face.Face.AgeRange,
           Smile: face.Face.Smile,
           Emotions: face.Face.Emotions          
