@@ -24,7 +24,7 @@ const startFaceSearch = (videoKey, collectionId) => {
       // ClientRequestToken: "startFaceDetectionToken",
       // FaceAttributes: "ALL",  // not supported for this API
       CollectionId: collectionId,
-      FaceMatchThreshold: 90,
+      FaceMatchThreshold: 98,
       JobTag: "startFaceSearch",
       NotificationChannel: {
         RoleArn: APP_ROLE_ARN, 
@@ -43,10 +43,8 @@ const startFaceSearch = (videoKey, collectionId) => {
 // Emotions Values: 8 types (except "Unknown")
 // HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
-const s3_video_key = 'sample-1.mp4';
-
-// Pick 1 face data for each person 
-const getPersonsInVideo = (data) => {
+// Pick 1 face data for each person, no dulplicate faces
+const getDistinctPersonsInVideo = (data) => {
   
   let oldIndex = -1;
   let allPersons = [];  
@@ -66,9 +64,9 @@ const getPersonsInVideo = (data) => {
         "Index": item.Person.Index,
         "BoundingBox": item.Person.Face.BoundingBox,
         "Confidence": item.Person.Face.Confidence,
-        "ExternalImageId": item.FaceMatches[0].ExternalImageId,
-        "FaceId": item.FaceMatches[0].FaceId,
-        "ImageId": item.FaceMatches[0].ImageId
+        "ExternalImageId": item.FaceMatches[0].Face.ExternalImageId,
+        "FaceId": item.FaceMatches[0].Face.FaceId,
+        "ImageId": item.FaceMatches[0].Face.ImageId
       };
     }
   }
@@ -78,36 +76,49 @@ const getPersonsInVideo = (data) => {
 
 };
 
+// Get persons from multiple videos as recurred customers
+// Identify recurring people by finding externalImageIds which contains different video info
+// Return the video-frame-time of the former visits
+// const getRecurringPersonsIndex = (data) => {
+
+//   return {
+//     Index: 
+//   }
+// }
+
+
 // when job is succedded in sqs, call this function
-const getFaceSearch = (jobId) => {
-
-  return new Promise((resolve, reject) => {
+async function getFaceSearch (jobId, type) {
     
-    let nextToken = '';
-    let persons = [];
+  let nextToken = '';
+  let persons = [];
 
-    // do { 
-      const params = { JobId: jobId, MaxResults: 1000, NextToken: nextToken, SortBy: "INDEX" };  // by PERSON INDEX
-      rekognition.getFaceSearch(params, (err, data) => {  
-        if(!err) {
-          persons = getPersonsInVideo(data);
-          console.log(`Recognized ${persons.length} persons in video ${s3_video_key}`);
+  do { 
+    const params = { JobId: jobId, MaxResults: 1000, NextToken: nextToken, SortBy: "INDEX" };  // by PERSON INDEX
+    let data = await rekognition.getFaceSearch(params).promise();
 
-          nextToken = data.NextToken || '';
-          resolve(persons);
-        } else {
-          reject(err);
-        }
-      });
-    // } while (nextToken);
-  });
+    if (type === 'NEW_SEARCH') {
+      persons = getDistinctPersonsInVideo(data);  // data or persons should be concated when loop twiece or more
+      console.log(`Recognized ${persons.length} persons in video ${s3_video_key}`);
+    }
+  
+    // TODO: 
+    // if (type === 'RECUR_SEARCH') {
+    //   persons = getRecurringPersonsInVideo(data);
+    //   console.log(`Recognized ${persons.length} recurring persons in video ${s3_video_key}`);
+    // }
+  
+    nextToken = data.NextToken || '';
+
+  } while (nextToken);
+ 
   // console.log(`getFaceSearch in rek-search`, persons);
-  // return persons;
+  return persons;
 
 }
 
 // entry function for call api startFaceSearch
-async function getPersonUniqFace (videoKey, collectionId) {
+async function getPersonUniqFace (videoKey, collectionId, type) {
 
   await deleteSQSHisMessages(APP_REK_SQS_NAME);
 
@@ -117,28 +128,14 @@ async function getPersonUniqFace (videoKey, collectionId) {
   let status = await getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId);
   console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query`);
   
-  let persons = await getFaceSearch(task.JobId); // this is async 
+  let persons = await getFaceSearch(task.JobId, type); // this is async 
 
   return persons;  
 
-  // deleteSQSHisMessages(APP_REK_SQS_NAME).then( () => { 
-  //   // start a new task when SQS is empty
-  //   startFaceSearch(videoKey, collectionId).then((task) => {
-
-  //     console.log(`StartFaceSearch..., JobId: ${task.JobId}`);   
-  //     getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId).then((status) => {
-  //       console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query`);
-  //       let allPerons = (async () => await getFaceSearch(task.JobId))();  // this is async
-  //       console.log('all perosns in rek-search module:', allPerons);
-
-  //       return allPerons;
-  //     });
-
-  //   }).catch((err) => console.log("Failed to track persons in video on S3:", err.stack));
-
-  // });
 };
 
+
+const s3_video_key = 'sample-1.mp4';
 // call this function when click 
 
 // getUniqFaceDetails(s3_video_key, APP_REK_TEMP_COLLECTION_ID);

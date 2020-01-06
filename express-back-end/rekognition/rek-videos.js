@@ -250,7 +250,6 @@ const getPersonWithDetails = (persons, faceDetails) => {
 // Emotions Values: 8 types (except "Unknown")
 // HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
-const s3_video_key = 'sample-0.mp4';  // test video
 
 async function videoPreAnalysis (videoKey) {
 
@@ -270,23 +269,29 @@ async function videoPreAnalysis (videoKey) {
 
   // Step 1: Get all faces extracted with all detailed attributes
   let detailedFaces = getFacesDetails(data);  
-
-  // let copyDetailedFaces = JSON.parse(JSON.stringify(detailedFaces));
   let copyDetailedFaces = _.cloneDeep(detailedFaces); // use more memory
+  // let copyDetailedFaces = JSON.parse(JSON.stringify(detailedFaces));
 
   // Step 2: Add all faces into a collection for comparision
   await video.cropFacesFromLocalVideo(copyDetailedFaces, videoKey); //comment when test
   await rebuildCollection(APP_REK_TEMP_COLLECTION_ID);
   await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID);
-  await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_DB_COLLECTION_ID);
   
-  // Step 3: Search faces and obtain a only uniq face for each person
-  let persons = await getPersonUniqFace(videoKey, APP_REK_TEMP_COLLECTION_ID);
+  // Step 3: Search faces in temporary collection to obtain uniq face for each person
+  let persons = await getPersonUniqFace(videoKey, APP_REK_TEMP_COLLECTION_ID, 'NEW_SEARCH');
 
   // Step 4: Get the detailed demographic attributes for individuals
   let personsWithDetails = getPersonWithDetails(persons, detailedFaces);
 
-  // Step 5: Write into database
+  // Step 5: Write into database (faces, visits, video-faces tables)
+
+  // Step 6: Call searchFaces again in db-collection to identify recuring people
+  let recurs = await getPersonUniqFace(videoKey, APP_REK_TEMP_COLLECTION_ID, 'RECUR_SEARCH');
+  await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_DB_COLLECTION_ID);
+  // BY using current found uniq faces to searchImageInOldCollection one by one to get recurring
+  // its faster 
+  // OR BY searchFaces in video against the Old collection
+
 
 
   // Step 6: Cleanup
@@ -296,6 +301,7 @@ async function videoPreAnalysis (videoKey) {
 // call this function when click 
 // addImageIntoCollection(APP_FACES_BUCKET_NAME, APP_REK_TEMP_COLLECTION_ID);
 
+const s3_video_key = 'sample-3.mp4';  // test video
 videoPreAnalysis(s3_video_key);
 
 module.exports = { videoPreAnalysis };
