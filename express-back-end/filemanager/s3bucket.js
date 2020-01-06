@@ -75,9 +75,8 @@ async function createFolderInBucket(videoName, targetBucket) {
 
   try{
     let data = await s3Client.upload(params).promise(); 
-    if(data) console.log(`Folder Created Successfully on S3: ${data.Location}`);
+    if(data) console.log(`Folder for storing face images Created Successfully on S3: ${data.Location}`);
   }catch(error){
-        console.log('输了' + error)
     console.log(`Error creating the folder: ${err}`);
   }
 
