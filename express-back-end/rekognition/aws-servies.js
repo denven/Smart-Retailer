@@ -47,16 +47,26 @@ async function awsServiceStart(awsTask) {
     AWS.config.setPromisesDependency(require('bluebird'));
   }
 
-  rekognition.listCollections({}, (err, data) => {
-    if(!data.CollectionIds.includes(APP_REK_TEMP_COLLECTION_ID)) {
-      rekognition.createCollection({CollectionId: APP_REK_TEMP_COLLECTION_ID}, (err, data) => {    
-        if (err) console.log(err, err.stack); // an error occurred
-        else     console.log(`Created Collection, Id: ${data.CollectionArn}`);           // successful response
-      });
-    } else {
-      console.log(`Already created CollecionId ${APP_REK_TEMP_COLLECTION_ID} for the App`);
-    }
-  });
+  // rekognition.listCollections({}, (err, data) => {
+  //   if(!data.CollectionIds.includes(APP_REK_TEMP_COLLECTION_ID)) {
+  //     rekognition.createCollection({CollectionId: APP_REK_TEMP_COLLECTION_ID}, (err, data) => {    
+  //       if (err) console.log(err, err.stack); // an error occurred
+  //       else     console.log(`Created Collection, Id: ${data.CollectionArn}`);           // successful response
+  //     });
+  //   } else {
+  //     console.log(`Already created CollecionId ${APP_REK_TEMP_COLLECTION_ID} for the App`);
+  //   }
+  // });
+
+  try {
+    let p1 = rekognition.createCollection({CollectionId: APP_REK_TEMP_COLLECTION_ID}).promise();
+    let p2 = rekognition.createCollection({CollectionId: APP_REK_DB_COLLECTION_ID}).promise();  
+    let data = await Promise.all([p1, p2]);
+    console.log(`Created Collection, Id: ${data}`);           // excutes when all promises resolved
+    // console.log(`Created Collection, Id: ${data.CollectionArn}`);           // successful response
+  } catch (error) {
+    console.log(`${error.name}: ${error.message}`);  // can only catch the 1st error in Promise.all
+  }
 
   sqs.getQueueUrl({ QueueName: APP_REK_SQS_NAME}).promise().then((data) => sqsQueueUrl = data.QueueUrl); 
 
