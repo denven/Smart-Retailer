@@ -127,6 +127,7 @@ async function deleteSQSHisMessages(queName) {
     }
     if(msgEntries.length > 0) {
       //NOTE: the max number to do batch delete is 10
+      if(msgEntries.length > 10) msgEntries.splice(10); 
       const deleteParams = { Entries: msgEntries, QueueUrl: params.QueueUrl }
       sqs.deleteMessageBatch(deleteParams, (err) => {
         if (err) console.log(`Error when deleting SQS Message: ${err}`);
