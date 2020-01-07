@@ -28,10 +28,12 @@ const msTohhmmssmmm = ( msTimestamp ) => {
 }
 
 // get face position in frame picture
-const getFaceBoundary = (boundingBox) => {
+const getFaceBoundary = (boundingBox, vidDimension) => {
 
-  let videoWidth = 1280;
-  let videoHeight = 720;
+  let videoWidth = vidDimension.width;
+  let videoHeight = vidDimension.height;
+
+  console.log(videoWidth, videoHeight);
 
   let size = boundingBox;
   size.Left = parseInt(size.Left * videoWidth);
