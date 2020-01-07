@@ -1,5 +1,9 @@
 const AWS = require('aws-sdk');
-require('dotenv').config();
+
+const path = require("path");
+const PATH = path.resolve(__dirname, "../.env");
+require('dotenv').config({ path: PATH });
+
 const inspect = require('util').inspect;
 
 const AWS_DEFAULT_REGION = 'us-west-2';
@@ -13,11 +17,8 @@ const APP_REK_TEMP_COLLECTION_ID = 'transition';
 
 const BUCKET_MAX_KEYS = 1000;
 
-// NOTE: The following two lines cannot take effect when requiring them from other js files
-// const APP_ROLE_ARN = process.env.ROLE_ARN;
-// const APP_SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
-const APP_ROLE_ARN = 'arn:aws:iam::137668631249:role/Rekognition_Final'
-const APP_SNS_TOPIC_ARN ='arn:aws:sns:us-west-2:137668631249:AmazonRekognition-Final'
+const APP_ROLE_ARN = process.env.ROLE_ARN;
+const APP_SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
 
 let sqsQueueUrl = null;   
 
