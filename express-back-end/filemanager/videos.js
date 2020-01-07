@@ -7,8 +7,8 @@ const path = require('path');
 const shell = require('shelljs');
 
 const s3Client = require('./s3bucket');
-const __demoRootDir = path.join(require('os').homedir(), 'lighthouse', 'final', 'Demo');
 
+const __demoRootDir = path.join(require('os').homedir(), 'lighthouse', 'final', 'Demo');
 const APP_FACES_BUCKET_NAME = 'retailer-faces';
 
 //TODO: recieve file from front end and save to video path
@@ -24,13 +24,12 @@ const prepareDataDirectories = (videoFileName) => {
 
 // Get Video Dimension
 async function getVideoDimension (videoFileName) {
-  
+
   const videoFullName = path.join(__demoRootDir, 'Videos', videoFileName);
   // let dimension = await getDimensions(videoFullName);
   const dimension = {};
   ffmpeg.ffprobe(videoFullName, (err, metadata) => {
     if(!err) {
-      console.log(metadata);
       dimension.width = metadata.streams[0].width;
       dimension.height= metadata.streams[0].height;
       dimension.duration = metadata.streams[0].duration;
@@ -129,17 +128,22 @@ async function cropFacesFromLocalVideo (allFrames, videoFileName) {
 
   prepareDataDirectories();
 
-  dimension = await getVideoDimension(videoFileName);
-  let frames = await Promise.all(takeScreenshots(allFrames, videoFileName, dimension));
-  console.log(`Extracted ${frames.length} frames from video ${videoFileName}`);
+  try {
+    dimension = await getVideoDimension(videoFileName);
+    let frames = await Promise.all(takeScreenshots(allFrames, videoFileName, dimension));
+    console.log(`Extracted ${frames.length} frames from video ${videoFileName}`);
 
-  let faces = await Promise.all(cropFacesFromScreenshots(allFrames, videoFileName, dimension));  
-  console.log(`Cropped ${faces.length} faces from video ${videoFileName}, Done!`);
-  const faceImgPath = path.join(__demoRootDir, 'Faces', videoFileName);
-  let faces_bucket = await s3Client.createFolderInBucket(videoFileName, APP_FACES_BUCKET_NAME);
-  
-  let data = await s3Client.uploadMultiFiles(faceImgPath, APP_FACES_BUCKET_NAME, videoFileName);
-  console.log(`Uploaded ${data.length} face images to s3 successfully`);      
+    let faces = await Promise.all(cropFacesFromScreenshots(allFrames, videoFileName, dimension));  
+    console.log(`Cropped ${faces.length} faces from video ${videoFileName}, Done!`);
+    const faceImgPath = path.join(__demoRootDir, 'Faces', videoFileName);
+    let faces_bucket = await s3Client.createFolderInBucket(videoFileName, APP_FACES_BUCKET_NAME);
+    
+    let data = await s3Client.uploadMultiFiles(faceImgPath, APP_FACES_BUCKET_NAME, videoFileName);
+    console.log(`Uploaded ${data.length} face images to s3 successfully`);       
+  } catch (error) {
+    console.log(error);
+  }
+ 
 }
 
 // tests
