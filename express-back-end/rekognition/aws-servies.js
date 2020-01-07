@@ -116,7 +116,6 @@ async function deleteSQSHisMessages(queName) {
           
           console.log(`Found ${data.Messages.length} history messages in SQS`);           
           for(const msg of data.Messages) {
-            console.log(`Delete Msg from JobId:`, JSON.parse(JSON.parse(msg.Body).Message).JobId);
             msgEntries.push({ Id: msg.MessageId, ReceiptHandle: msg.ReceiptHandle});
           };
 
@@ -126,15 +125,14 @@ async function deleteSQSHisMessages(queName) {
         } 
       }).catch((err) => queryStop = true);
     }
-    if(!msgEntries) {
+    if(msgEntries.length > 0) {
+      //NOTE: the max number to do batch delete is 10
       const deleteParams = { Entries: msgEntries, QueueUrl: params.QueueUrl }
       sqs.deleteMessageBatch(deleteParams, (err) => {
         if (err) console.log(`Error when deleting SQS Message: ${err}`);
-        else { 
-          console.log(`Deleted ${deleteParams.Entries.length} history messages in SQS`); 
-        }
+        else console.log(`Deleted ${deleteParams.Entries.length} history messages in SQS`); 
       }); 
-    }
+    } else { console.log(`Code run without deleting!`) }
   } catch(error) { 
     console.log(`SQS History Msg Polling Error:`, error);
   };
@@ -154,37 +152,33 @@ async function getSQSMessageSuccess(queName, jobId) {
     WaitTimeSeconds: 20     // test timeout, max allowed value is 20
   };    
 
-  let msgFound = false;
+  let jobDone = false;  //
   try {
-    await sqs.receiveMessage(params).promise().then((data) => {
-  // return new Promise ((resovle, reject) => { 
-    if(data.Messages) {
-      for(const msg of data.Messages) {
-        const msgContent = JSON.parse(JSON.parse(msg.Body).Message);
-        if (msgContent.JobId === jobId) {
-          if (msgContent.Status === 'SUCCEEDED') {
-            console.log(`Get Rekognition JobStatus: ${msgContent.Status}! JobId: ${jobId}`);
-            msgFound = true;
-          } else {
-            console.log(`Get Rekognition JobStatus: ${msgContent.Status}, continuing... JobId: ${jobId}`);
-            // const asyncWait = ms => new Promise(resolve => setTimeout(resolve, ms));
-            // (async () => await asyncWait(5000))();
-            msgFound = (async() => await getSQSMessageSuccess(queName, jobId))();
-          }
+    while(jobDone === false) {
+      await sqs.receiveMessage(params).promise().then((data) => {
+        if(data.Messages) {
+          for(const msg of data.Messages) {
+            const msgContent = JSON.parse(JSON.parse(msg.Body).Message);
+            if (msgContent.JobId === jobId) {
+              if (msgContent.Status === 'SUCCEEDED') {
+                console.log(`Get Rekognition JobStatus: ${msgContent.Status}! JobId: ${jobId}`);
+                jobDone = true;
+              } else {
+                console.log(`Get Rekognition JobStatus: ${msgContent.Status}, continuing... JobId: ${jobId}`);
+              }
+            }
+          } // end of for  
+        } else {
+          console.log(`Timeout, failed to get JobStatus msg in ${params.WaitTimeSeconds} seconds from SQS, try another time...`);
         }
-      } // end of for  
-    } else {
-      console.log(`Timeout, failed to get JobStatus msg in ${params.WaitTimeSeconds} seconds from SQS, try another time...`);
-      msgFound = (async() => await getSQSMessageSuccess(queName, jobId))();
+      })
     }
-  // }); // promise
-    })
   }
   catch(error) { 
     console.log("SQS New Task Status Msg Receive Error:", error); 
   };
   
-  return msgFound;
+  return jobDone;
 }
 
 module.exports = {
