@@ -1,14 +1,22 @@
 const _ = require('lodash');
 
+const chalk = require('chalk');
+const INFO = chalk.bold.green;
+const ERROR = chalk.bold.red;
+const WARN = chalk.keyword('orange');
+const Chalk = console.log;
+ 
+
 const { s3, rekognition,
   APP_VIDEO_BUCKET_NAME, APP_FACES_BUCKET_NAME, APP_REK_SQS_NAME,
-  APP_REK_TEMP_COLLECTION_ID, APP_REK_DB_COLLECTION_ID, BUCKET_MAX_KEYS, 
-  APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
+  APP_REK_TEMP_COLLECTION_ID, APP_REK_DB_COLLECTION_ID, 
+  BUCKET_MAX_KEYS, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
 
-const { getPersonUniqFace } = require('./rek-search');
-
-const video = require('../filemanager/videos');
+const { searchPersonsByType } = require('./rek-search');
+const { startTrackingAnalysis } = require('./rek-traffic');
+const { cropFacesFromLocalVideo } = require('../filemanager/videos');
+const { getAgeRangeCategory, getMostConfidentEmotion } = require('./db-data');
 
 const getBestMatchedFaceId = (matchedFaces) => {
   return matchedFaces[0].Face.FaceId; // save it into local database
@@ -34,8 +42,12 @@ async function rebuildCollection (id) {
 
   try {
     await rekognition.deleteCollection( { CollectionId: id } ).promise();
+  } catch (error) {
+    console.log(`Failed to Delete the temporary collection, ${error.name} ${error.message}`);
+  }
+
+  try {
     await rekognition.createCollection( { CollectionId: id } ).promise();
-    console.log(`Created a temporary collection \"${id}\" for analyzing demographic information`);
   } catch (error) {
     console.log(`Failed to Create the temporary collection, ${error.name} ${error.message}`);
   }
@@ -49,7 +61,7 @@ async function addFacesIntoCollection (bucketName, folder, collectionId) {
   const bucketParams = { 
     Bucket: bucketName,  /* required */
     Delimiter: '/',
-    Prefix: folder + '/',  //your folder name
+    Prefix: folder + '/', 
     MaxKeys: BUCKET_MAX_KEYS 
   };  
 
@@ -57,9 +69,9 @@ async function addFacesIntoCollection (bucketName, folder, collectionId) {
 
   let buckObjs = await s3.listObjectsV2(bucketParams).promise();
   let faceImages = buckObjs.Contents;
-  faceImages.splice(0, 1);
+  faceImages.splice(0, 1);  // remove the folder object
 
-  let faceIndexPromises =faceImages.map((faceImage) => {
+  let faceIndexPromises = faceImages.map((faceImage) => {
     const params = {
       CollectionId: collectionId,
       DetectionAttributes: ["ALL"],
@@ -195,12 +207,13 @@ const startFaceDetection = (videoKey) => {
 };
 
 // Note: There is no faceId in this returned data.
+// All attributes of faces are below, we only care about demographic realted ones
+// "Face": { "Confidence", "Eyeglasses", "Sunglasses", "Gender", "Landmarks",
+//           "Pose", "Emotions", "AgeRange", "EyesOpen", "BoundingBox", "Smile",
+//           "MouthOpen", "Quality", "Mustache", "Beard" }
+// Emotions Values: 8 types (except "Unknown")
+// HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 const getFacesDetails = (faceData) => {
-
-  // All attributes of faces are below, we only care about demographic realted ones
-  // "Face": { "Confidence", "Eyeglasses", "Sunglasses", "Gender", "Landmarks",
-  //           "Pose", "Emotions", "AgeRange", "EyesOpen", "BoundingBox", "Smile",
-  //           "MouthOpen", "Quality", "Mustache", "Beard" }
   
   let facesDetails = [];
 
@@ -211,11 +224,17 @@ const getFacesDetails = (faceData) => {
     };
     facesDetails.push(newFace);
   }
+
   return facesDetails;
 };
 
 
-const getPersonWithDetails = (persons, faceDetails) => {
+/**
+ * Get demographic data per person
+ * @param {Array} persons returned by getFaceSearch()
+ * @param {Array} faceDetails returned by getFaceDetection()
+ */
+const getPersonsWithDetails = (persons, faceDetails) => {
 
   let detailedPersons = [];
   console.log('Target faces for comparision in collection pool:', faceDetails.length);
@@ -223,6 +242,7 @@ const getPersonWithDetails = (persons, faceDetails) => {
 
     for(const person of persons) {
       if (_.isEqual(face.Face.BoundingBox, person.BoundingBox)) {
+        console.log(face.Face.AgeRange);
         detailedPersons.push( {
           // the person.attributes below come from searchFaces in collection
           Index: person.Index,
@@ -234,74 +254,84 @@ const getPersonWithDetails = (persons, faceDetails) => {
 
           // the face.attributes below come from faceDetection(no collection compared)
           Gender: face.Face.Gender.Value,
-          AgeRange: face.Face.AgeRange,
+          AgeRange: getAgeRangeCategory(face.Face.AgeRange),
           Smile: face.Face.Smile.Value,
-          Emotions: face.Face.Emotions,
+          Emotion: getMostConfidentEmotion(face.Face.Emotions)
         });
       }
     } // for
 
   });
 
-  console.log(`Unique Persons Detailed Data:`, detailedPersons);
+  console.log(`Unique Persons With Detailed Face Data:`, detailedPersons);
   return detailedPersons;
 }
 
-// Emotions Values: 8 types (except "Unknown")
-// HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
 
 
-async function videoPreAnalysis (videoKey) {
+async function startVideoPreAnalysis (videoKey) {
 
-  console.log(`Video Pre-Analyzing: ${videoKey}`);
+  Chalk(INFO(`Video Pre-Analyzing: ${videoKey}`));
   await deleteSQSHisMessages(APP_REK_SQS_NAME);
   
   let task = await startFaceDetection(videoKey);
 
   // TODO: when total number of faces > 1000 for the long duration videos
   const params = { JobId: task.JobId, MaxResults: 1000};  
-  console.log(`StartFaceDetection..., JobId: ${task.JobId}`);   
+  Chalk(INFO(`Starts Job: Face Detection, JobId: ${task.JobId}`));   
          
   let status = await getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId);  
-  console.log(`Job Status: ${status}`);
+  console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
 
   let data = await rekognition.getFaceDetection(params).promise();
 
-  // Step 1: Get all faces extracted with all detailed attributes
   let detailedFaces = getFacesDetails(data);  
   let copyDetailedFaces = _.cloneDeep(detailedFaces); // use more memory
   // let copyDetailedFaces = JSON.parse(JSON.stringify(detailedFaces));
 
-  // Step 2: Add all faces into a collection for comparision
-  await video.cropFacesFromLocalVideo(copyDetailedFaces, videoKey); //comment when test
+  await cropFacesFromLocalVideo(copyDetailedFaces, videoKey); //comment when test
   await rebuildCollection(APP_REK_TEMP_COLLECTION_ID);
   await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_TEMP_COLLECTION_ID);
-  
-  // Step 3: Search faces in temporary collection to obtain uniq face for each person
-  let persons = await getPersonUniqFace(videoKey, APP_REK_TEMP_COLLECTION_ID, 'NEW_SEARCH');
 
-  // Step 4: Get the detailed demographic attributes for individuals
-  let personsWithDetails = getPersonWithDetails(persons, detailedFaces);
+  return new Promise((resolve, reject) => {
+    if(detailedFaces.length > 0) resolve(detailedFaces);
+    else reject(`Error when pre-analyzing the video, ${videoKey}`);
+  });
 
-  // Step 5: Write into database (faces, visits, video-faces tables)
+}
 
-  // Step 6: Call searchFaces again in db-collection to identify recuring people
-  let recurs = await getPersonUniqFace(videoKey, APP_REK_TEMP_COLLECTION_ID, 'RECUR_SEARCH');
+async function videoRekognitionMain (videoKey) {
+ 
+  // Step 1: Pre-Analyze the video(video/images process, file uploading, face detection) 
+  // Traget: To get all faces with details in the video (cannot tell who they are here)
+  let detailedFaces = await startVideoPreAnalysis(videoKey);
+
+  // Step 2: Search faces in temporary collection to obtain uniq face for each person
+  // Target: Get the demographic attributes for individuals in the video
+  let persons = await searchPersonsByType(videoKey, APP_REK_TEMP_COLLECTION_ID, 'NEW_SEARCH');
+  let personsWithDetails = getPersonsWithDetails(persons, detailedFaces);
+  // //TODO: Write into database (faces, visits, video-faces tables)
+
+  // Step 3: Search faces again in the db-collection to identify recuring people
+  let visits = await searchPersonsByType(videoKey, APP_REK_DB_COLLECTION_ID, 'RECUR_SEARCH');
   await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_DB_COLLECTION_ID);
-  // BY using current found uniq faces to searchImageInOldCollection one by one to get recurring
-  // its faster 
-  // OR BY searchFaces in video against the Old collection
+  // // TODO: Write into database
 
-
-
-  // Step 6: Cleanup
-
+  // Step 4: Cleanup
+  let allPersonsTracked = await startTrackingAnalysis(videoKey);
+  
 };
 
 // call this function when click 
 // addImageIntoCollection(APP_FACES_BUCKET_NAME, APP_REK_TEMP_COLLECTION_ID);
 
-const s3_video_key = 'sample-3.mp4';  // test video
-videoPreAnalysis(s3_video_key);
+//  const s3_video_key = 'sample-3.mp4';  // test video
+// const s3_video_key = 'VID_20200106_191848.mp4';  // test video
+// const s3_video_key = 'VID_20200106_191924.mp4';  // test video
+// const s3_video_key = 'sample-0.mp4';  // test video
+const s3_video_key = 'sample-1.mp4';  // test video
+// const s3_video_key = 'sample-3.mp4';  // test video
 
-module.exports = { videoPreAnalysis };
+videoRekognitionMain(s3_video_key);
+
+module.exports = { videoRekognitionMain };

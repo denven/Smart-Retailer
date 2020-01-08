@@ -1,5 +1,4 @@
 const AWS = require('aws-sdk');
-
 const path = require("path");
 const PATH = path.resolve(__dirname, "../.env");
 require('dotenv').config({ path: PATH });
@@ -120,20 +119,19 @@ async function deleteSQSHisMessages(queName) {
           };
 
         } else {   
-          console.log(`No more history messages found in SQS`);
           queryStop = true;
         } 
       }).catch((err) => queryStop = true);
     }
     if(msgEntries.length > 0) {
-      //NOTE: the max number to do batch delete is 10
+      //NOTE: the max messages number is 10 when doing a batch delete
       if(msgEntries.length > 10) msgEntries.splice(10); 
       const deleteParams = { Entries: msgEntries, QueueUrl: params.QueueUrl }
       sqs.deleteMessageBatch(deleteParams, (err) => {
         if (err) console.log(`Error when deleting SQS Message: ${err}`);
         else console.log(`Deleted ${deleteParams.Entries.length} history messages in SQS`); 
       }); 
-    } else { console.log(`Code run without deleting!`) }
+    } else { console.log(`No queued messages in SQS`) }
   } catch(error) { 
     console.log(`SQS History Msg Polling Error:`, error);
   };
@@ -170,7 +168,8 @@ async function getSQSMessageSuccess(queName, jobId) {
             }
           } // end of for  
         } else {
-          console.log(`Timeout, failed to get JobStatus msg in ${params.WaitTimeSeconds} seconds from SQS, try another time...`);
+          console.log(`Timeout, failed to get JobStatus msg in ${params.WaitTimeSeconds}\
+          seconds from SQS, try another time...`);
         }
       })
     }

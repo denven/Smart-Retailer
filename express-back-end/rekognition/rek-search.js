@@ -1,17 +1,21 @@
 /*
  * By searching faces in collection(We need 2 collections)
  * 1. by comparing selve's faces collection to get uniq faces detail data
- *   delete/empty the indexes in collection before analyzing new video/after one video is analyzed
+ *    delete/empty the indexes in collection before analyzing new video/after one video is analyzed
  * 2. by comparing existed faces collection to get recurred faces for new video 
  * adding new faces into existed collection for future recuring analysis
  **/
 
 const _ = require('lodash');
 
-const {rekognition,
-  APP_VIDEO_BUCKET_NAME, APP_FACES_BUCKET_NAME, APP_REK_SQS_NAME,
-  APP_REK_DB_COLLECTION_ID, APP_REK_TEMP_COLLECTION_ID, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
-  deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
+const chalk = require('chalk');
+const INFO = chalk.bold.green;
+const ERROR = chalk.bold.red;
+const WARN = chalk.keyword('orange');
+const Chalk = console.log;
+
+const { rekognition, APP_VIDEO_BUCKET_NAME, APP_REK_SQS_NAME, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
+        deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
 
 const startFaceSearch = (videoKey, collectionId) => {
   
@@ -40,22 +44,19 @@ const startFaceSearch = (videoKey, collectionId) => {
 
 };
 
-// Emotions Values: 8 types (except "Unknown")
-// HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
-
 // Pick 1 face data for each person, no dulplicate faces
 const getDistinctPersonsInVideo = (data) => {
   
   let oldIndex = -1;
-  let allPersons = [];  
   let person = {};
+  let allPersons = []; 
 
   console.log(`Get ${data.Persons.length} faces data by searchFaces in collection`)
   for (const item of data.Persons) {   
     
     if(item.Person.Index !== oldIndex) { 
       if(oldIndex >= 0) {
-        let newObj = JSON.parse(JSON.stringify(person));
+        let newObj = JSON.parse(JSON.stringify(person)); //deep copy
         allPersons.push(newObj);  //record a person
       }
       oldIndex = item.Person.Index;
@@ -79,67 +80,99 @@ const getDistinctPersonsInVideo = (data) => {
 // Get persons from multiple videos as recurred customers
 // Identify recurring people by finding externalImageIds which contains different video info
 // Return the video-frame-time of the former visits
-// const getRecurringPersonsIndex = (data) => {
+const getDistinctPersonsVisitsData = (personsFaces, curVidName) => {
 
-//   return {
-//     Index: 
-//   }
-// }
+  let oldIndex = -1;
+  let allPersons = [];  
+  let person = {Index: '', Timestamp: '', HisVisits: []};
+
+  console.log(`Search for recuring people from other videos`)
+  for (const item of personsFaces.Persons) {   
+    
+    if(item.Person.Index !== oldIndex) { 
+
+      if(oldIndex >= 0) {
+        let newObj = JSON.parse(JSON.stringify(person));
+        allPersons.push(newObj);  //record a person
+        person = {};
+      }
+      oldIndex = item.Person.Index;
+      person.Index = item.Person.Index;
+      person.Timestamp = item.Timestamp;
+      person.HisVisits = [];
+    }
+
+    // search for face's externalImageId containing info from other video
+    // eg: VID_20200106_191924-00:00:03.469-1.png => VID_20200106_191924      
+    for(const face of item.FaceMatches) {
+      let faceSrcVideo = face.Face.ExternalImageId.slice(0, -19);
+      let faceTimestamp = face.Face.ExternalImageId.slice(-18, -4);
+      // console.log(person.Index, curVidName, faceSrcVideo, faceTimestamp);
+      if ( faceSrcVideo !== curVidName ) {
+        let visits = person.HisVisits.filter(item => { return (item.Vid === faceSrcVideo) });
+        if (visits.length === 0) {
+          person.HisVisits.push({ Vid: faceSrcVideo, Timestamp: faceTimestamp });
+        }
+        // console.log(person.Index, faceSrcVideo, curVidName, JSON.stringify(person.HisVisits));
+      }
+    }
+  }
+
+  allPersons.push(person); //last person
+  return allPersons;
+}
 
 
-// when job is succedded in sqs, call this function
-async function getFaceSearch (jobId, type) {
+// when job succeeded in sqs, call this function
+async function getFaceSearch (jobId, type, videoKey) {
     
   let nextToken = '';
   let persons = [];
 
   do { 
-    const params = { JobId: jobId, MaxResults: 1000, NextToken: nextToken, SortBy: "INDEX" };  // by PERSON INDEX
+    const params = { JobId: jobId, MaxResults: 1000, NextToken: nextToken, SortBy: "INDEX" }; 
     let data = await rekognition.getFaceSearch(params).promise();
 
+    //TODO: data needs to be concatanated when there are a serial fetches of getFaceSearch() 
+    //TODO: called for a single JobId, this would happen when long duration videos are processed
+
     if (type === 'NEW_SEARCH') {
-      persons = getDistinctPersonsInVideo(data);  // data or persons should be concated when loop twiece or more
-      console.log(`Recognized ${persons.length} persons in video ${s3_video_key}`);
+      persons = getDistinctPersonsInVideo(data);  // data or persons should be concated when loop twice or more
+      Chalk(INFO(`Recognized ${persons.length} persons in video ${videoKey}`));
     }
-  
-    // TODO: 
-    // if (type === 'RECUR_SEARCH') {
-    //   persons = getRecurringPersonsInVideo(data);
-    //   console.log(`Recognized ${persons.length} recurring persons in video ${s3_video_key}`);
-    // }
+
+    if (type === 'RECUR_SEARCH') {
+      const vidNameOnly = videoKey.slice(0, -4);  //remove extension of filename
+      persons = getDistinctPersonsVisitsData(data, vidNameOnly);
+      let recurs = _.filter(persons, (person) => {return person.HisVisits.length > 0} )
+      Chalk(INFO(`Recognized ${recurs.length} recurring from ${persons.length} persons in video ${videoKey}`));
+      console.log(JSON.stringify(recurs));
+    }
   
     nextToken = data.NextToken || '';
 
   } while (nextToken);
  
-  // console.log(`getFaceSearch in rek-search`, persons);
   return persons;
 
 }
 
 // entry function for call api startFaceSearch
-async function getPersonUniqFace (videoKey, collectionId, type) {
+async function searchPersonsByType (videoKey, collectionId, type) {
 
   await deleteSQSHisMessages(APP_REK_SQS_NAME);
 
   let task = await startFaceSearch(videoKey, collectionId);
-  console.log(`StartFaceSearch..., JobId: ${task.JobId}`);   
+  Chalk(INFO(`Starts Job: Face Search, JobId: ${task.JobId}`));   
 
   let status = await getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId);
-  console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query`);
+  console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
   
-  let persons = await getFaceSearch(task.JobId, type); // this is async 
+  let persons = await getFaceSearch(task.JobId, type, videoKey); // this is async 
 
   return persons;  
 
 };
 
 
-const s3_video_key = 'sample-1.mp4';
-// call this function when click 
-
-// getUniqFaceDetails(s3_video_key, APP_REK_TEMP_COLLECTION_ID);
-// getFaceSearch('aba023ce3b8f0a20159273908708be5fc350f65aed2ecf2e2c370ae51a29d1a9');
-
-
-module.exports = { getPersonUniqFace };
+module.exports = { searchPersonsByType };
