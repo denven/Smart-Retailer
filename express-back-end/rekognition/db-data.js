@@ -49,10 +49,11 @@ const isPersonStillStaying = (timestamp, visit) => {
  * @param {Array} TrackedPersons returned by startPersonTracking() in rek-traffic
  */
 const getTrackedTraffic = (TrackedPersons) => {
-console.log(TrackedPersons);
+
   let traffic = [];
   
   for(const visit of TrackedPersons) {
+
     let count = 0;
     TrackedPersons.forEach( person => {
       if(isPersonStillStaying(visit.show_timestamp, person)) count++;
@@ -70,10 +71,10 @@ console.log(TrackedPersons);
     traffic.push( { timestamp: visit.leave_timestamp, count: count } );
   }
 
-  _.orderBy(traffic, );
+  let data = _(traffic).orderBy(['timestamp', 'asc']).uniqBy('timestamp').value();
+  // console.log(data);
 
-  console.log(traffic);
-  return traffic;
+  return data;
 }
 
 
