@@ -168,8 +168,7 @@ async function getSQSMessageSuccess(queName, jobId) {
             }
           } // end of for  
         } else {
-          console.log(`Timeout, failed to get JobStatus msg in ${params.WaitTimeSeconds}\
-          seconds from SQS, try another time...`);
+          console.log(`Timeout, failed to get JobStatus msg in ${params.WaitTimeSeconds} seconds from SQS, try another time...`);
         }
       })
     }

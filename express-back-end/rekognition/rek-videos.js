@@ -1,11 +1,9 @@
 const _ = require('lodash');
-
 const chalk = require('chalk');
 const INFO = chalk.bold.green;
 const ERROR = chalk.bold.red;
 const WARN = chalk.keyword('orange');
 const Chalk = console.log;
- 
 
 const { s3, rekognition,
   APP_VIDEO_BUCKET_NAME, APP_FACES_BUCKET_NAME, APP_REK_SQS_NAME,
@@ -16,24 +14,7 @@ const { s3, rekognition,
 const { searchPersonsByType } = require('./rek-search');
 const { startTrackingAnalysis } = require('./rek-traffic');
 const { cropFacesFromLocalVideo } = require('../filemanager/videos');
-const { getAgeRangeCategory, getMostConfidentEmotion } = require('./db-data');
-
-const getBestMatchedFaceId = (matchedFaces) => {
-  return matchedFaces[0].Face.FaceId; // save it into local database
-}
-
-const keepUniqFaceInCollection = (matchedFaces, collectionId) => {
-  if(matchedFaces.length >= 2) {
-    let delFaces = matchedFaces.map(item => item.Face.FaceId);
-    delFaces.splice(0,1);
-    console.log(`We will delete ${delFaces.length} faces in collection`);
-    const params = { CollectionId: collectionId, FaceIds: delFaces};
-    rekognition.deleteFaces(params, function(err, data) {
-      if (err) console.log(`Error when deleting faces from collection ${err}`); // an error occurred
-      else     console.log(data);           // successful response
-    });
-  }
-}
+const { getAgeRangeCategory, getMostConfidentEmotion, getTrackedTraffic } = require('./db-data');
  
 // This function is used to delete and create the collection by a collection ID
 // This makes it easier to empty an collection other than deleting all the faces
@@ -242,7 +223,6 @@ const getPersonsWithDetails = (persons, faceDetails) => {
 
     for(const person of persons) {
       if (_.isEqual(face.Face.BoundingBox, person.BoundingBox)) {
-        console.log(face.Face.AgeRange);
         detailedPersons.push( {
           // the person.attributes below come from searchFaces in collection
           Index: person.Index,
@@ -266,7 +246,6 @@ const getPersonsWithDetails = (persons, faceDetails) => {
   console.log(`Unique Persons With Detailed Face Data:`, detailedPersons);
   return detailedPersons;
 }
-
 
 
 async function startVideoPreAnalysis (videoKey) {
@@ -315,11 +294,12 @@ async function videoRekognitionMain (videoKey) {
   // Step 3: Search faces again in the db-collection to identify recuring people
   let visits = await searchPersonsByType(videoKey, APP_REK_DB_COLLECTION_ID, 'RECUR_SEARCH');
   await addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_DB_COLLECTION_ID);
-  // // TODO: Write into database
+  // TODO: Write into database
 
   // Step 4: Cleanup
   let allPersonsTracked = await startTrackingAnalysis(videoKey);
-  
+  getTrackedTraffic(allPersonsTracked);
+
 };
 
 // call this function when click 

@@ -12,7 +12,6 @@ const _ = require('lodash')
 const getMostConfidentEmotion = (Emotions) => {
 
   let emotions = _.orderBy(Emotions, Number, ['Confidence', 'desc']);
-  console.log(JSON.stringify(emotions));
   return emotions[0].Type;
 
 }
@@ -72,7 +71,7 @@ const getTrackedTraffic = (TrackedPersons) => {
   }
 
   let data = _(traffic).orderBy(['timestamp', 'asc']).uniqBy('timestamp').value();
-  // console.log(data);
+  console.log(data);
 
   return data;
 }

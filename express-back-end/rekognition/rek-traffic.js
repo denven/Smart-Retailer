@@ -1,6 +1,8 @@
-// This module will use large memory and the analysis is time consuming
-// no faces collection needed when processing
-// test data: 16s duration video analysis needs 120s, 23s video needs 180s
+/** 
+ * This module will use large memory and the analysis is time consuming
+ * no faces collection needed when processing
+ * test data: 16s duration video analysis needs 120s, 23s video needs 180s
+ **/
 
 const chalk = require('chalk');
 const INFO = chalk.bold.green;
@@ -56,6 +58,7 @@ const getPersonsInVideo = (allPersonsData) => {
   let person = {show_timestamp: '', leave_timestamp: '', index: '' };
 
   for (const item of allPersonsData) {
+
     if(item.Index !== oldIndex) { 
       if(oldIndex >= 0) {
         let newObj = JSON.parse(JSON.stringify(person));
@@ -95,9 +98,9 @@ async function getPersonsTracking (jobId, videoKey) {
 
   console.log(allPersonsData.length);
   let persons = getPersonsInVideo(allPersonsData);
-  Chalk(INFO(`Found ${persons.length} persons in video ${videoKey}`));
+  Chalk(INFO(`Found ${persons.length} persons by tracking motions in video ${videoKey}`));
 
-  return allPersonsData;
+  return persons;
 
 }
 
@@ -122,9 +125,5 @@ async function startTrackingAnalysis (videoKey) {
 
 };
 
-// // test code
-const s3_video_key = 'sample-0.mp4';
-startTrackingAnalysis(s3_video_key);
-// // getPersonsTracking('ed96bc196e712dbe28df2cc6d87a2739c369165d3a52e9c86f68c4db20360e82');
 
 module.exports = { startTrackingAnalysis }

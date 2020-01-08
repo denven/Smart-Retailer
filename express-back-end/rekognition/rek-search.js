@@ -127,33 +127,35 @@ const getDistinctPersonsVisitsData = (personsFaces, curVidName) => {
 async function getFaceSearch (jobId, type, videoKey) {
     
   let nextToken = '';
-  let persons = [];
+  let allPersons = [];
 
   do { 
     const params = { JobId: jobId, MaxResults: 1000, NextToken: nextToken, SortBy: "INDEX" }; 
     let data = await rekognition.getFaceSearch(params).promise();
 
-    //TODO: data needs to be concatanated when there are a serial fetches of getFaceSearch() 
-    //TODO: called for a single JobId, this would happen when long duration videos are processed
-
     if (type === 'NEW_SEARCH') {
-      persons = getDistinctPersonsInVideo(data);  // data or persons should be concated when loop twice or more
-      Chalk(INFO(`Recognized ${persons.length} persons in video ${videoKey}`));
+      let pagePersons = getDistinctPersonsInVideo(data);  
+      allPersons.push.apply(allPersons, pagePersons);
     }
 
     if (type === 'RECUR_SEARCH') {
       const vidNameOnly = videoKey.slice(0, -4);  //remove extension of filename
-      persons = getDistinctPersonsVisitsData(data, vidNameOnly);
-      let recurs = _.filter(persons, (person) => {return person.HisVisits.length > 0} )
-      Chalk(INFO(`Recognized ${recurs.length} recurring from ${persons.length} persons in video ${videoKey}`));
-      console.log(JSON.stringify(recurs));
+      let pagePersons = getDistinctPersonsVisitsData(data, vidNameOnly);
+      allPersons.push.apply(allPersons, pagePersons);
     }
   
     nextToken = data.NextToken || '';
 
   } while (nextToken);
+
+  if(type === 'NEW_SEARCH') { 
+    Chalk(INFO(`Recognized ${allPersons.length} persons in video ${videoKey}`));
+  } else {
+    let recurs = _.filter(allPersons, (person) => {return person.HisVisits.length > 0} );
+    Chalk(INFO(`Recognized ${recurs.length} recurring from ${allPersons.length} persons in video ${videoKey}`));
+  }
  
-  return persons;
+  return allPersons;
 
 }
 
