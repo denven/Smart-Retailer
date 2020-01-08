@@ -5,7 +5,7 @@ const _ = require('lodash')
 
 /**
  * @param {*} Emotions: Array of 8 types and values of emotions 
- * '[ {"Type":"CALM","Confidence":1.825882077217102}, ..., {"Type":"SAD","Confidence":0.7703105211257935}]'
+ * '[ {"Type":"CALM","Confidence":1.825882077217102}, ...]'
  * Emotions Value: has 8 types (except "Unknown")
  * HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
  */
@@ -35,8 +35,50 @@ const getAgeRangeCategory = (AgeRange) => {
 }
 
 
+// helper for calculating the traffic by time
+const isPersonStillStaying = (timestamp, visit) => {
+  if(timestamp >= visit.show_timestamp && timestamp <= visit.leave_timestamp) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Return an array of objects which have the count of traffic by timestamp
+ * @param {Array} TrackedPersons returned by startPersonTracking() in rek-traffic
+ */
+const getTrackedTraffic = (TrackedPersons) => {
+console.log(TrackedPersons);
+  let traffic = [];
+  
+  for(const visit of TrackedPersons) {
+    let count = 0;
+    TrackedPersons.forEach( person => {
+      if(isPersonStillStaying(visit.show_timestamp, person)) count++;
+    });
+
+    traffic.push( { timestamp: visit.show_timestamp, count: count } );
+  }
+
+  for(const visit of TrackedPersons) {
+    let count = 0;
+    TrackedPersons.forEach( person => {
+      if(isPersonStillStaying(visit.leave_timestamp, person)) count++;
+    });
+
+    traffic.push( { timestamp: visit.leave_timestamp, count: count } );
+  }
+
+  _.orderBy(traffic, );
+
+  console.log(traffic);
+  return traffic;
+}
 
 
-
-
- module.exports = { getMostConfidentEmotion, getAgeRangeCategory }
+ module.exports = { 
+   getMostConfidentEmotion, 
+   getAgeRangeCategory,
+   getTrackedTraffic
+  }
