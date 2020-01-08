@@ -62,6 +62,7 @@ const takeScreenshots = (frames, videoFileName, vidDimension) => {
   const videoFullName = path.join(__demoRootDir, 'Videos', videoFileName);
   shell.mkdir('-p', frameImgPath);
 
+  const vidNameOnly = videoFileName.split('.').slice(0, -1).join('.'); // trim file extension
   const sizeByDimension = `${vidDimension.width}x${vidDimension.height}`;
   for(const frame of frames) {
 
@@ -74,7 +75,7 @@ const takeScreenshots = (frames, videoFileName, vidDimension) => {
           .on('end', (data) => resolve(data))
           .screenshots({
               timestamps: [newTimestamp],
-              filename: `frame-${newTimestamp}.png`,
+              filename: `${vidNameOnly}-${newTimestamp}.png`,
               folder: frameImgPath,
               size: sizeByDimension
           });
@@ -99,6 +100,9 @@ const cropFacesFromScreenshots = (faces, videoFileName, vidDimension) => {
     const frameImgPath = path.join(__demoRootDir, 'Frames', videoFileName);
     shell.mkdir('-p', faceImgPath);
 
+    const vidNameOnly = videoFileName.split('.').slice(0, -1).join('.'); // trim file extension
+
+    console.log(`Cropping:`, videoFileName, vidDimension);
     return faces.map((frame) => {
 
       let size = helper.getFaceBoundary(frame.Face.BoundingBox, vidDimension);
@@ -110,11 +114,11 @@ const cropFacesFromScreenshots = (faces, videoFileName, vidDimension) => {
         sequence = 0;  // reset
       }
 
-      sequence++;  // count of face in one frame
+      sequence++;  // count of faces in one frame
       return new Promise((resolve, reject) => {
-        sharp(`${frameImgPath}/frame-${newTimestamp}.png`)
+        sharp(`${frameImgPath}/${vidNameOnly}-${newTimestamp}.png`)
           .extract({ width: size.Width, height: size.Height, left: size.Left, top: size.Top})
-          .toFile(`${faceImgPath}/frame-${frame.Timestamp}-${sequence}.png`)
+          .toFile(`${faceImgPath}/${vidNameOnly}-${frame.Timestamp}-${sequence}.png`)
           .then(file => resolve(file))
           .catch(err => reject(err));
       })
@@ -132,25 +136,23 @@ async function cropFacesFromLocalVideo (allFrames, videoFileName) {
     dimension = await getVideoDimension(videoFileName);
     let frames = await Promise.all(takeScreenshots(allFrames, videoFileName, dimension));
     console.log(`Extracted ${frames.length} frames from video ${videoFileName}`);
+  } catch (error) {
+    console.log(`Exception when taking video screenshots, ${error}`);
+  }
 
+  try {
     let faces = await Promise.all(cropFacesFromScreenshots(allFrames, videoFileName, dimension));  
     console.log(`Cropped ${faces.length} faces from video ${videoFileName}, Done!`);
-    const faceImgPath = path.join(__demoRootDir, 'Faces', videoFileName);
-    let faces_bucket = await s3Client.createFolderInBucket(videoFileName, APP_FACES_BUCKET_NAME);
-    
-    let data = await s3Client.uploadMultiFiles(faceImgPath, APP_FACES_BUCKET_NAME, videoFileName);
-    console.log(`Uploaded ${data.length} face images to s3 successfully`);       
   } catch (error) {
-    console.log(error);
+    console.log(`Exception when cropping faces from video, ${error}`);
   }
+
+  const faceImgPath = path.join(__demoRootDir, 'Faces', videoFileName);
+  let faces_bucket = await s3Client.createFolderInBucket(videoFileName, APP_FACES_BUCKET_NAME);
+  
+  // let data = await s3Client.uploadMultiFiles(faceImgPath, APP_FACES_BUCKET_NAME, videoFileName);
+  // console.log(`Uploaded ${data.length} face images to s3 successfully`);       
  
 }
-
-// tests
-// let faces = require('./allFaces.json');
-// console.log(faces.Faces.length);
-// console.time('New image crop');
-// cropFacesFromLocalVideo(faces, 'sample-1.mp4');
-// console.log('done');
 
 module.exports = { cropFacesFromLocalVideo };

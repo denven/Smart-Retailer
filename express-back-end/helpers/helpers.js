@@ -33,8 +33,6 @@ const getFaceBoundary = (boundingBox, vidDimension) => {
   let videoWidth = vidDimension.width;
   let videoHeight = vidDimension.height;
 
-  console.log(videoWidth, videoHeight);
-
   let size = boundingBox;
   size.Left = parseInt(size.Left * videoWidth);
   size.Top = parseInt(size.Top * videoHeight);
