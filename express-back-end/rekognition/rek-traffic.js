@@ -2,6 +2,12 @@
 // no faces collection needed when processing
 // test data: 16s duration video analysis needs 120s, 23s video needs 180s
 
+const chalk = require('chalk');
+const INFO = chalk.bold.green;
+const ERROR = chalk.bold.red;
+const WARN = chalk.keyword('orange');
+const Chalk = console.log;
+
 const { rekognition, APP_VIDEO_BUCKET_NAME, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   APP_REK_SQS_NAME, deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
 
@@ -66,69 +72,59 @@ const getPersonsInVideo = (allPersonsData) => {
   }
 
   allPersons.push(person); //last person
+  console.log(allPersons);
   return allPersons;
 
 };
 
-const s3_video_key = 'sample-1.mp4';
-const video_local_path = '/home/chengwen/lighthouse/final/Demo/Videos/sample-.mp4';
 
-const getPersonsTracking = (jobId) => {
+async function getPersonsTracking (jobId, videoKey) {
 
   let nextToken = '';
   let allPersonsData = [];
 
   do { 
     const params = { JobId: jobId, MaxResults: 1000, NextToken: nextToken, SortBy: "INDEX"};
-    rekognition.getPersonTracking(params, (err, trackData) => {
-      if (!err) {
-        let curReqData = getAllPersonsData(trackData);
-        allPersonsData.push.apply(allPersonsData, curReqData);
-        nextToken = trackData.NextToken || '';
-      } else {
-        console.log(err, err.stack);
-      }
-    });
+    let data = await rekognition.getPersonTracking(params).promise();
+    
+    let curReqData = getAllPersonsData(data);
+    allPersonsData.push.apply(allPersonsData, curReqData);
+    nextToken = data.NextToken || '';
+
   } while (nextToken);
 
-  // althoug getPersonTracking is not an asynchronous function from aws docs, but it still 
-  // takes much time to excute and the while may not be able to loop as it hits a empty 
-  // nextToken before it's altered in the callback
-  // use a timeout to excute the following codes, otherwise, we will get an empty allPersonsData
-  // or change the loop into async/await or promise, or a recursion implementation version
-  setTimeout(()=>{
-    console.log(allPersonsData.length);
-    let persons = getPersonsInVideo(allPersonsData);
-    console.log(`Found ${persons.length} persons in video ${s3_video_key}`);
-  }, 5000); 
+  console.log(allPersonsData.length);
+  let persons = getPersonsInVideo(allPersonsData);
+  Chalk(INFO(`Found ${persons.length} persons in video ${videoKey}`));
+
+  return allPersonsData;
 
 }
 
-const startPersonTrackingAnalysis = (s3_video_key) => {
-  
-  deleteSQSHisMessages(APP_REK_SQS_NAME).then( () => { 
+async function startTrackingAnalysis (videoKey) {
+ 
+  try {
+
+    await deleteSQSHisMessages(APP_REK_SQS_NAME);
+    let task = await startPersonTracking(videoKey);
+    Chalk(INFO(`Starts Job: Person Tracking, JobId: ${task.JobId}`));   
+
+    let status = await getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId);
+    console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
     
-    // start a new task when SQS is empty
-    startPersonTracking(s3_video_key).then((task) => {
+    let allTrackedPersons = getPersonsTracking(task.JobId, videoKey);
 
-      console.log(`StartPersonTracking... for video ${s3_video_key}, JobId: ${task.JobId}`);   
-      getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId)
-      .then((status) => {
-        console.log(status);
-        let allPerons = getPersonsTracking(task.JobId);
-        // getVideoTraffic(allPerons);  //TODO:
-      });
+    return allTrackedPersons;
 
-    }).catch((err) => console.log("Failed to track persons in video on S3:", err.stack));
-
-  });
+  } catch(error) {
+    Chalk(ERROR(`Failed to track persons in video ${videoKey}:`, err.stack));
+  }
 
 };
 
-// test code
-// startPersonTrackingAnalysis(s3_video_key);
-// getPersonsTracking('ed96bc196e712dbe28df2cc6d87a2739c369165d3a52e9c86f68c4db20360e82');
+// // test code
+const s3_video_key = 'sample-0.mp4';
+startTrackingAnalysis(s3_video_key);
+// // getPersonsTracking('ed96bc196e712dbe28df2cc6d87a2739c369165d3a52e9c86f68c4db20360e82');
 
-module.exports = {
-  startPersonTrackingAnalysis
-}
+module.exports = { startTrackingAnalysis }
