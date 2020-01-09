@@ -7,11 +7,12 @@
 const chalk = require('chalk');
 const INFO = chalk.bold.green;
 const ERROR = chalk.bold.red;
-const WARN = chalk.keyword('orange');
+const HINT = chalk.keyword('orange');
 const Chalk = console.log;
 
 const { rekognition, APP_VIDEO_BUCKET_NAME, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   APP_REK_SQS_NAME, deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
+const { getTrackedTraffic } = require('./db-data');
 
 const startPersonTracking = (videoKey) => {
 
@@ -96,7 +97,8 @@ async function getPersonsTracking (jobId, videoKey) {
 
   } while (nextToken);
 
-  console.log(allPersonsData.length);
+  console.log(`Page Content Number: ${allPersonsData.length}`);  // debug output
+
   let persons = getPersonsInVideo(allPersonsData);
   Chalk(INFO(`Found ${persons.length} persons by tracking motions in video ${videoKey}`));
 
@@ -104,25 +106,38 @@ async function getPersonsTracking (jobId, videoKey) {
 
 }
 
+/**
+ * Person Tracking Job Entry function
+ *
+ * @param {String} videoKey
+ */
 async function startTrackingAnalysis (videoKey) {
  
+  console.time('Job Tracking Analysis');
+
   try {
 
     await deleteSQSHisMessages(APP_REK_SQS_NAME);
     let task = await startPersonTracking(videoKey);
-    Chalk(INFO(`Starts Job: Person Tracking, JobId: ${task.JobId}`));   
+    Chalk(HINT(`Starts Job: Person Tracking, JobId: ${task.JobId}`));   
 
     let status = await getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId);
     console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
     
-    let allTrackedPersons = getPersonsTracking(task.JobId, videoKey);
+    let allTrackedPersons = await getPersonsTracking(task.JobId, videoKey);
+    let vidPersonTraffic = getTrackedTraffic(allTrackedPersons);  // prepare for db writing
+    console.log(vidPersonTraffic);
 
-    return allTrackedPersons;
+    Chalk(INFO('Job Person Tracking Analysis: Done!'));
 
-  } catch(error) {
-    Chalk(ERROR(`Failed to track persons in video ${videoKey}:`, err.stack));
+    // return allTrackedPersons;
+
+  } catch(err) {
+
+    Chalk(ERROR(`Job Person Tracking: Failed to track persons in video ${videoKey},`, err.stack));
   }
 
+  console.timeEnd('Job Tracking Analysis');
 };
 
 
