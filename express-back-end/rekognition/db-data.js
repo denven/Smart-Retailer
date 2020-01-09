@@ -4,7 +4,7 @@
 const _ = require('lodash')
 
 /**
- * @param {*} Emotions: Array of 8 types and values of emotions 
+ * @param {Array} Emotions: Array of 8 types and values of emotions 
  * '[ {"Type":"CALM","Confidence":1.825882077217102}, ...]'
  * Emotions Value: has 8 types (except "Unknown")
  * HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
