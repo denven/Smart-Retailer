@@ -91,6 +91,16 @@ const getRekSQSMessageUrl = (queName) => {
   });
 }
 
+/**
+ * Delete all the job messages whose job status is suceeded in SQS before starting
+ * tasks for a new video analysis.
+ * 
+ * NOTE: It takes time if there are many message left in SQS since it loop to query 
+ * all messages from SQS until there is no message left. 
+ * So call it once for each video analysis (jobs) instead of each Rekognition job.
+ *
+ * @param {String} queName
+ */
 async function deleteSQSHisMessages(queName) {
 
   let sqsFullUrl = await getRekSQSMessageUrl(queName);
@@ -99,7 +109,7 @@ async function deleteSQSHisMessages(queName) {
     MaxNumberOfMessages: 10,
     MessageAttributeNames: ["All"],
     QueueUrl: sqsFullUrl,
-    VisibilityTimeout: 60,
+    VisibilityTimeout: 36000,  // 10 hours for testing large video files
     WaitTimeSeconds: 20     // test timeout
   };
 
@@ -109,37 +119,50 @@ async function deleteSQSHisMessages(queName) {
   let queryStop = false;
 
   try {
+
     while (queryStop === false) {
+
       await sqs.receiveMessage(params).promise().then((data) => {
-        if(data.Messages) {
-          
-          console.log(`Found ${data.Messages.length} history messages in SQS`);           
+        if(data.Messages) {          
+          console.log(`Found ${data.Messages.length} history messages in SQS`);
           for(const msg of data.Messages) {
-            msgEntries.push({ Id: msg.MessageId, ReceiptHandle: msg.ReceiptHandle});
+            if (msgContent.Status === 'SUCCEEDED') {
+              msgEntries.push({ Id: msg.MessageId, ReceiptHandle: msg.ReceiptHandle});
+            }
           };
 
         } else {   
-          queryStop = true;
+          queryStop = true;  // no more messages
         } 
       }).catch((err) => queryStop = true);
+
     }
+
     if(msgEntries.length > 0) {
+
       //NOTE: the max messages number is 10 when doing a batch delete
       if(msgEntries.length > 10) msgEntries.splice(10); 
       const deleteParams = { Entries: msgEntries, QueueUrl: params.QueueUrl }
       sqs.deleteMessageBatch(deleteParams, (err) => {
         if (err) console.log(`Error when deleting SQS Message: ${err}`);
-        else console.log(`Deleted ${deleteParams.Entries.length} history messages in SQS`); 
+        else console.log(`Deleted ${deleteParams.Entries.length} history messages(from completed jobs) in SQS`); 
       }); 
+
     } else { console.log(`No queued messages in SQS`) }
+
   } catch(error) { 
     console.log(`SQS History Msg Polling Error:`, error);
   };
 
 }
 
-// https://sqs.us-west-2.amazonaws.com/137668631249/Rekognition
-async function getSQSMessageSuccess(queName, jobId) {
+/**
+ * Query the Rekognition Job status from SQS message content.
+ * 
+ * @param {String} queName 
+ * @param {String} jobId 
+ */
+async function queryJobStatusFromSQS(queName, jobId) {
 
   let sqsFullUrl = await getRekSQSMessageUrl(queName);
   const params = {
@@ -147,8 +170,8 @@ async function getSQSMessageSuccess(queName, jobId) {
     MaxNumberOfMessages: 10,
     MessageAttributeNames: ["All"],
     QueueUrl: sqsFullUrl,
-    VisibilityTimeout: 60,
-    WaitTimeSeconds: 20     // test timeout, max allowed value is 20
+    VisibilityTimeout: 360000,    // 10 hours
+    WaitTimeSeconds: 20         // test timeout, max allowed value is 20
   };    
 
   let jobDone = false;  //
@@ -160,10 +183,10 @@ async function getSQSMessageSuccess(queName, jobId) {
             const msgContent = JSON.parse(JSON.parse(msg.Body).Message);
             if (msgContent.JobId === jobId) {
               if (msgContent.Status === 'SUCCEEDED') {
-                console.log(`Get Rekognition JobStatus: ${msgContent.Status}! JobId: ${jobId}`);
+                console.log(`Rekognition Job Status: ${msgContent.Status}, JobId: ${jobId}`);
                 jobDone = true;
               } else {
-                console.log(`Get Rekognition JobStatus: ${msgContent.Status}, continuing... JobId: ${jobId}`);
+                console.log(`Rekognition Job Status: ${msgContent.Status}, continuing... JobId: ${jobId}`);
               }
             }
           } // end of for  
@@ -194,5 +217,5 @@ module.exports = {
   BUCKET_MAX_KEYS,
   awsServiceStart,
   deleteSQSHisMessages,
-  getSQSMessageSuccess
+  queryJobStatusFromSQS
 }

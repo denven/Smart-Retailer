@@ -11,7 +11,7 @@ const HINT = chalk.keyword('orange');
 const Chalk = console.log;
 
 const { rekognition, APP_VIDEO_BUCKET_NAME, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
-  APP_REK_SQS_NAME, deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
+  APP_REK_SQS_NAME, deleteSQSHisMessages, queryJobStatusFromSQS } = require('./aws-servies');
 const { getTrackedTraffic } = require('./db-data');
 
 const startPersonTracking = (videoKey) => {
@@ -121,7 +121,7 @@ async function startTrackingAnalysis (videoKey) {
     let task = await startPersonTracking(videoKey);
     Chalk(HINT(`Starts Job: Person Tracking, JobId: ${task.JobId}`));   
 
-    let status = await getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId);
+    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task.JobId);
     console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
     
     let allTrackedPersons = await getPersonsTracking(task.JobId, videoKey);
