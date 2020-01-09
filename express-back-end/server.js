@@ -1,28 +1,26 @@
-const Express = require('express');
-const App = Express();
-const BodyParser = require('body-parser');
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
 const PORT = 8080;
+
+const knex = require('./database/db').knex;
+const db = require('./database/db');
+
 
 const awsSrv = require('./rekognition/aws-servies');
 
 // Express Configuration
-App.use(BodyParser.urlencoded({ extended: false }));
-App.use(Express.static('public'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.static('public'));
+app.use(express.json());
 
-// Sample GET route
-App.get('/api/data', (req, res) => res.json({
-  message: "Seems to work!",
-}));
+const appRoutes = require("./routes/routes")();
+app.use("/", appRoutes); // mount all the routes to root path (no other divisions)
 
-const router = Express.Router();
-const kenex = require('./database/db');
-const appRoutes = require('./routes/routes');
-appRoutes(router, kenex);
-App.use('/', router);
 
-awsSrv.awsServiceStart();
+db.testDBConnection();
 
-App.listen(PORT, () => {
-  // eslint-disable-next-line no-console
+
+app.listen(PORT, () => {
   console.log(`Express seems to be listening on port ${PORT} so that's pretty good 👍`);
 });
