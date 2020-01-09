@@ -80,6 +80,60 @@ async function awsServiceStart(awsTask) {
 };
 
 ////////////////////////////////////////////////////////////////////////
+// This function is used to delete and create the collection by a collection ID
+// This makes it easier to empty an collection other than deleting all the faces
+// in the collection as all faceIds should be found and passed into deletFaces()
+async function rebuildCollection (id) {
+
+  try {
+    await rekognition.deleteCollection( { CollectionId: id } ).promise();
+  } catch (error) {
+    console.log(`Failed to Delete the temporary collection, ${error.name} ${error.message}`);
+  }
+
+  try {
+    await rekognition.createCollection( { CollectionId: id } ).promise();
+  } catch (error) {
+    console.log(`Failed to Create the temporary collection, ${error.name} ${error.message}`);
+  }
+
+}
+ 
+//NOTE: This is the current solution by adding all faces into collection
+//      Donot need to do the comparision before addint indexes
+async function addFacesIntoCollection (bucketName, folder, collectionId) {
+
+  const bucketParams = { 
+    Bucket: bucketName,  /* required */
+    Delimiter: '/',
+    Prefix: folder + '/', 
+    MaxKeys: BUCKET_MAX_KEYS 
+  };  
+
+  console.log(`Adding faces(s3 image file objects) into collection ${collectionId} ....`);
+
+  let buckObjs = await s3.listObjectsV2(bucketParams).promise();
+  let faceImages = buckObjs.Contents;
+  faceImages.splice(0, 1);  // remove the folder object
+
+  let faceIndexPromises = faceImages.map((faceImage) => {
+    const params = {
+      CollectionId: collectionId,
+      DetectionAttributes: ["ALL"],
+      ExternalImageId: faceImage.Key.split('/').pop(),
+      Image: { S3Object: { Bucket: bucketName, Name: faceImage.Key } },
+      MaxFaces: 10,
+      QualityFilter: "HIGH"  // change to HIGH may be better
+    };
+
+    return rekognition.indexFaces(params).promise();   
+  });
+
+  let addRetData = await Promise.all(faceIndexPromises);
+  console.log(`Added ${addRetData.length} faces into collection \"${collectionId}\"`);
+}
+
+////////////////////////////////////////////////////////////////////////
 // functions use SQS are below
 
 const getRekSQSMessageUrl = (queName) => {
@@ -126,9 +180,9 @@ async function deleteSQSHisMessages(queName) {
         if(data.Messages) {          
           console.log(`Found ${data.Messages.length} history messages in SQS`);
           for(const msg of data.Messages) {
-            if (msgContent.Status === 'SUCCEEDED') {
+            // if (msgContent.Status === 'SUCCEEDED') {
               msgEntries.push({ Id: msg.MessageId, ReceiptHandle: msg.ReceiptHandle});
-            }
+            // }
           };
 
         } else {   
@@ -170,7 +224,7 @@ async function queryJobStatusFromSQS(queName, jobId) {
     MaxNumberOfMessages: 10,
     MessageAttributeNames: ["All"],
     QueueUrl: sqsFullUrl,
-    VisibilityTimeout: 360000,    // 10 hours
+    VisibilityTimeout: 36000,    // 10 hours
     WaitTimeSeconds: 20         // test timeout, max allowed value is 20
   };    
 
@@ -217,5 +271,7 @@ module.exports = {
   BUCKET_MAX_KEYS,
   awsServiceStart,
   deleteSQSHisMessages,
-  queryJobStatusFromSQS
+  queryJobStatusFromSQS,
+  rebuildCollection,
+  addFacesIntoCollection
 }

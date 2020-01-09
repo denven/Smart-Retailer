@@ -11,11 +11,13 @@ const _ = require('lodash');
 const chalk = require('chalk');
 const INFO = chalk.bold.green;
 const ERROR = chalk.bold.red;
-const WARN = chalk.keyword('orange');
+const HINT = chalk.keyword('orange');
 const Chalk = console.log;
 
 const { rekognition, APP_VIDEO_BUCKET_NAME, APP_REK_SQS_NAME, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
-        deleteSQSHisMessages, getSQSMessageSuccess } = require('./aws-servies');
+        APP_FACES_BUCKET_NAME, APP_REK_DB_COLLECTION_ID, queryJobStatusFromSQS, addFacesIntoCollection 
+      } = require('./aws-servies');
+const { getAgeRangeCategory, getMostConfidentEmotion } = require('./db-data');
 
 const startFaceSearch = (videoKey, collectionId) => {
   
@@ -124,7 +126,7 @@ const getDistinctPersonsVisitsData = (personsFaces, curVidName) => {
 
 
 // when job succeeded in sqs, call this function
-async function getFaceSearch (jobId, type, videoKey) {
+async function getFaceSearch (jobId, videoKey, type) {
     
   let nextToken = '';
   let allPersons = [];
@@ -159,22 +161,97 @@ async function getFaceSearch (jobId, type, videoKey) {
 
 }
 
+
+/**
+ * Get demographic data per person
+ * 
+ * @param {Array} persons returned by getFaceSearch()
+ * @param {Array} faceDetails returned by getFaceDetection()
+ */
+const getPersonsWithDetails = (persons, faceDetails) => {
+
+  let detailedPersons = [];
+  console.log('Target faces for comparision in collection pool:', faceDetails.length);
+  faceDetails.forEach((face) => {
+
+    for(const person of persons) {
+      if (_.isEqual(face.Face.BoundingBox, person.BoundingBox)) {
+        detailedPersons.push( {
+          // the person.attributes below come from searchFaces in collection
+          Index: person.Index,
+          Timestamp: person.Timestamp,
+          ExternalImageId: person.ExternalImageId,
+          FaceId: person.FaceId,
+          ImageId: person.ImageId,
+          Confidence: person.Confidence,
+
+          // the face.attributes below come from faceDetection(no collection compared)
+          Gender: face.Face.Gender.Value,
+          AgeRange: getAgeRangeCategory(face.Face.AgeRange),
+          Smile: face.Face.Smile.Value,
+          Emotion: getMostConfidentEmotion(face.Face.Emotions)
+        });
+      }
+    } // for
+
+  });
+
+  console.log(`Unique Persons With Detailed Face Data:`, detailedPersons);
+  return detailedPersons;
+}
+
 // entry function for call api startFaceSearch
-async function searchPersonsByType (videoKey, collectionId, type) {
+async function getPersonDetailsFromVideo (videoKey, collectionId, detailedFaces) {
 
-  await deleteSQSHisMessages(APP_REK_SQS_NAME);
+  console.time('Job Person Details Analysis');
 
-  let task = await startFaceSearch(videoKey, collectionId);
-  Chalk(INFO(`Starts Job: Face Search, JobId: ${task.JobId}`));   
+  try {
+    let task = await startFaceSearch(videoKey, collectionId);
+    Chalk(HINT(`Starts Job: Person Search, JobId: ${task.JobId}`));   
 
-  let status = await getSQSMessageSuccess(APP_REK_SQS_NAME, task.JobId);
-  console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
-  
-  let persons = await getFaceSearch(task.JobId, type, videoKey); // this is async 
+    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task.JobId);
+    console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
+    
+    let persons = await getFaceSearch(task.JobId, videoKey, 'NEW_SEARCH'); // this is async 
+    let personsWithDetails = getPersonsWithDetails(persons, detailedFaces);    
+    // //TODO: Write into database (faces, visits, video-faces tables)
 
-  return persons;  
+    Chalk(INFO('Job Person Search Analysis: Done!'));
+    console.timeEnd('Job Person Details Analysis');
+
+    // return persons; 
+
+  } catch (error) {
+    Chalk(ERROR(`Job Person Search: Failed to search persons in video ${videoKey},`, error.stack));
+  }
+   
+};
+
+// entry function for call api startFaceSearch
+async function getPersonRecuringAmongVideos (videoKey, collectionId) {
+
+  console.time('Job Person Recuring Analysis');
+  try {
+
+    let task = await startFaceSearch(videoKey, collectionId);
+    Chalk(HINT(`Starts Job: Person Recuring Search, JobId: ${task.JobId}`));   
+
+    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task.JobId);
+    console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
+    
+    let visits = await getFaceSearch(task.JobId, videoKey, 'RECUR_SEARCH'); // this is async 
+    addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_DB_COLLECTION_ID)
+
+    Chalk(INFO('Job Person Recuring Search: Done!'));
+    console.timeEnd('Job Person Recuring Analysis');
+
+    // return persons; 
+
+  } catch (error) {
+    Chalk(ERROR(`Job Person Recuring Search: Failed to search persons in video ${videoKey},`, error.stack));
+  }
+
 
 };
 
-
-module.exports = { searchPersonsByType };
+module.exports = { getPersonDetailsFromVideo, getPersonRecuringAmongVideos };

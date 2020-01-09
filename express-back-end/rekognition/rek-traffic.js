@@ -117,7 +117,7 @@ async function startTrackingAnalysis (videoKey) {
 
   try {
 
-    await deleteSQSHisMessages(APP_REK_SQS_NAME);
+    // await deleteSQSHisMessages(APP_REK_SQS_NAME);
     let task = await startPersonTracking(videoKey);
     Chalk(HINT(`Starts Job: Person Tracking, JobId: ${task.JobId}`));   
 
@@ -132,9 +132,9 @@ async function startTrackingAnalysis (videoKey) {
 
     // return allTrackedPersons;
 
-  } catch(err) {
+  } catch(error) {
 
-    Chalk(ERROR(`Job Person Tracking: Failed to track persons in video ${videoKey},`, err.stack));
+    Chalk(ERROR(`Job Person Tracking: Failed to track persons in video ${videoKey},`, error.stack));
   }
 
   console.timeEnd('Job Tracking Analysis');
