@@ -1,6 +1,21 @@
-// express routes for intercation with react front end
+/**
+ * express routes for intercation with react front end
+ */
 
-module.exports = function(router, db) {
+"use strict";
+
+const express = require('express');
+const router  = express.Router();
+const db = require('../database/db');
+
+
+module.exports = function() {
+
+  router.get("/", function(req, res) {
+    db.testDBConnection();
+    res.json({db: 'ok'});
+  });
+
     
   // receive video file from front end and then upload it into s3 bucket
   // router.post();
@@ -14,5 +29,7 @@ module.exports = function(router, db) {
 
   // return faces data for front end
   // router.get();
+
+  return router;   // this router must be returned when used as a router division
 
 };
