@@ -71,11 +71,12 @@ const getTrackedTraffic = (TrackedPersons) => {
   }
 
   let data = _(traffic).orderBy(['timestamp', 'asc']).uniqBy('timestamp').value();
-  console.log(data);
 
   return data;
 }
 
+// average stay time
+// average visit period
 
  module.exports = { 
    getMostConfidentEmotion, 

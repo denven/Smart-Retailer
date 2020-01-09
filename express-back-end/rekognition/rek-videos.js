@@ -120,10 +120,10 @@ async function videoRekognitionMain (videoKey) {
 
   // Step 2: Search faces in temporary collection to obtain uniq face for each person
   // Target: Get the demographic attributes for individuals in the video
-  await getPersonDetailsFromVideo(videoKey, APP_REK_TEMP_COLLECTION_ID, detailedFaces);
+  getPersonDetailsFromVideo(videoKey, APP_REK_TEMP_COLLECTION_ID, detailedFaces);
 
   // Step 3: Search faces again in the db-collection to identify recuring people
-  await getPersonRecuringAmongVideos(videoKey, APP_REK_DB_COLLECTION_ID);
+  getPersonRecuringAmongVideos(videoKey, APP_REK_DB_COLLECTION_ID);
  
 };
 

@@ -163,7 +163,7 @@ async function deleteSQSHisMessages(queName) {
     MaxNumberOfMessages: 10,
     MessageAttributeNames: ["All"],
     QueueUrl: sqsFullUrl,
-    VisibilityTimeout: 36000,  // 10 hours for testing large video files
+    VisibilityTimeout: 30,  // NOTE: DO NOT SET THIS TOO LARGE!!!
     WaitTimeSeconds: 20     // test timeout
   };
 
@@ -180,9 +180,9 @@ async function deleteSQSHisMessages(queName) {
         if(data.Messages) {          
           console.log(`Found ${data.Messages.length} history messages in SQS`);
           for(const msg of data.Messages) {
-            // if (msgContent.Status === 'SUCCEEDED') {
+            if (msgContent.Status === 'SUCCEEDED') {
               msgEntries.push({ Id: msg.MessageId, ReceiptHandle: msg.ReceiptHandle});
-            // }
+            }
           };
 
         } else {   
@@ -224,8 +224,8 @@ async function queryJobStatusFromSQS(queName, jobId) {
     MaxNumberOfMessages: 10,
     MessageAttributeNames: ["All"],
     QueueUrl: sqsFullUrl,
-    VisibilityTimeout: 36000,    // 10 hours
-    WaitTimeSeconds: 20         // test timeout, max allowed value is 20
+    VisibilityTimeout: 30,    // NOTE: There is bug here, if you set it greater, you nay not be able get message from SQS
+    WaitTimeSeconds: 20       // test timeout, max allowed value is 20
   };    
 
   let jobDone = false;  //
