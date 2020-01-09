@@ -1,57 +1,52 @@
-DROP TABLE IF EXISTS users CASCADE;
+-- psql
+-- create user rekognition with password 'development';
+-- create database smart_retailer owner development;
+-- edit /etc/postgresql/11/main/pg_hba.conf, add the following line
+-- local   development     development       md5  #  add this line above the following line
+-- local   all          all                              peer
+-- npm run db-init
+
 DROP TABLE IF EXISTS videos CASCADE;
 DROP TABLE IF EXISTS faces CASCADE;
-DROP TABLE IF EXISTS visits CASCADE;
+DROP TABLE IF EXISTS recurs CASCADE;
 DROP TABLE IF EXISTS traffic CASCADE;
 DROP TABLE IF EXISTS persons CASCADE;
-
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY NOT NULL,
-  name VARCHAR(255) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  s3_image VARCHAR(255)
-);
 
 CREATE TABLE videos (
   id SERIAL PRIMARY KEY NOT NULL,
   name VARCHAR(255) NOT NULL,
   duration INTEGER NOT NULL,
-  uploaded_at TIMESTAMP,
-  started_at TIMESTAMP, 
-  is_analyzed BOOLEAN DEFAULT FALSE,
-  s3_url VARCHAR(255),
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+  filmed_at TIMESTAMP NOT NULL, 
+  ana_status VARCHAR(32) NOT NULL,
+  s3_url VARCHAR(255)
 );
 
 CREATE TABLE faces (
   id SERIAL PRIMARY KEY NOT NULL,
-  faceId VARCHAR(255) NOT NULL,
-  gender BOOLEAN NOT NULL,
-  ageRange INTEGER NOT NULL,
-  externalId VARCHAR(255),
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+  sex BOOLEAN NOT NULL,
+  age INTEGER NOT NULL,
+  smile BOOLEAN NOT NULL,
+  emotion VARCHAR(32) NOT NULL,
+  external_id VARCHAR(255),
+  video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE
 );
 
-CREATE TABLE visits (
+CREATE TABLE recurs (
   id SERIAL PRIMARY KEY NOT NULL,
-  time TIMESTAMP NOT NULL,
-  emotions INTEGER[],
-  smile INTEGER NOT NULL,
-  face_id VARCHAR REFERENCES faces(id) ON DELETE CASCADE,
+  is_recuring BOOLEAN NOT NULL,
+  vist_date INTEGER NOT NULL,   /* average days interval of 2 visits: 0 when is_recuring is false */
   video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE
 );
 
 CREATE TABLE persons (
   id SERIAL PRIMARY KEY NOT NULL,
-  show_time TIMESTAMP NOT NULL,
-  leave_time TIMESTAMP NOT NULL,
-  index INTEGER,
+  stay_duration TIMESTAMP NOT NULL,  /* seconds */
   video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE
 );
 
 CREATE TABLE traffic (
   id SERIAL PRIMARY KEY NOT NULL,
-  timestamp INTEGER NOT NULL,
+  timestamp INTEGER NOT NULL,  /* seconds */
   count INTEGER NOT NULL,
   video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE
 );
