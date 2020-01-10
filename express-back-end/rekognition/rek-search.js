@@ -19,6 +19,19 @@ const { rekognition, APP_VIDEO_BUCKET_NAME, APP_REK_SQS_NAME, APP_ROLE_ARN, APP_
       } = require('./aws-servies');
 const { getAgeRangeCategory, getMostConfidentEmotion } = require('./db-data');
 
+/**
+ * Return true when collection is empty
+ * @param {String} collectionId 
+ */
+async function isCollectionEmpty (collectionId) {
+
+  rekognition.describeCollection({ CollectionId: collectionId }).promise()
+  .then(data => {
+    return (data.FaceCount > 0 ? false : true);
+  }).catch(err => console.log(err, err.stack));
+
+}
+
 const startFaceSearch = (videoKey, collectionId) => {
   
   return new Promise((resolve, reject) => {
@@ -206,10 +219,11 @@ async function getPersonDetailsFromVideo (videoKey, collectionId, detailedFaces)
   console.time('Job Person Details Analysis');
 
   try {
-    let task = await startFaceSearch(videoKey, collectionId);
+    let job = await startFaceSearch(videoKey, collectionId);
+    let task = { JobName: 'PersonSearch', JobId: job.JobId };  
     Chalk(HINT(`Starts Job: Person Search, JobId: ${task.JobId}`));   
 
-    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task.JobId);
+    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task);
     console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
     
     let persons = await getFaceSearch(task.JobId, videoKey, 'NEW_SEARCH'); // this is async 
@@ -230,13 +244,19 @@ async function getPersonDetailsFromVideo (videoKey, collectionId, detailedFaces)
 // entry function for call api startFaceSearch
 async function getPersonRecuringAmongVideos (videoKey, collectionId) {
 
+  if(await isCollectionEmpty(collectionId)) {
+    Chalk(HINT(`No Recuring analysis needed as ${videoKey} is the first video`));   
+    return;
+  }
+
   console.time('Job Person Recuring Analysis');
   try {
 
-    let task = await startFaceSearch(videoKey, collectionId);
+    let job = await startFaceSearch(videoKey, collectionId);
+    let task = { JobName: 'RecuringSearch', JobId: job.JobId }; 
     Chalk(HINT(`Starts Job: Person Recuring Search, JobId: ${task.JobId}`));   
 
-    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task.JobId);
+    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task);
     console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
     
     let visits = await getFaceSearch(task.JobId, videoKey, 'RECUR_SEARCH'); // this is async 
@@ -250,7 +270,6 @@ async function getPersonRecuringAmongVideos (videoKey, collectionId) {
   } catch (error) {
     Chalk(ERROR(`Job Person Recuring Search: Failed to search persons in video ${videoKey},`, error.stack));
   }
-
 
 };
 
