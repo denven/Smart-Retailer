@@ -31,7 +31,6 @@ export default function VerticalTabs(props) {
     props.changeView(newValue);
   };
 
-  console.log(props, 'props');
   return (
     <div className={classes.root}>
      
