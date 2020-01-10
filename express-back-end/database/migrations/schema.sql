@@ -1,5 +1,5 @@
 -- psql
--- create user rekognition with password 'development';
+-- create user development with password 'development';
 -- create database smart_retailer owner development;
 -- edit /etc/postgresql/11/main/pg_hba.conf, add the following line
 -- local   development     development       md5  #  add this line above the following line
@@ -17,7 +17,7 @@ CREATE TABLE videos (
   name VARCHAR(255) NOT NULL,
   duration INTEGER NOT NULL,
   filmed_at TIMESTAMP NOT NULL, 
-  ana_status VARCHAR(32) NOT NULL,
+  ana_status INTEGER NOT NULL,
   s3_url VARCHAR(255)
 );
 
