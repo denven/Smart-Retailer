@@ -3,11 +3,23 @@
 }
 
 .container {
-  display: flex;
-  flex-direction: row;
-  height: 800px
+  height: 100vh;
+  width: 100vw;
 }
-.sidebar {
-  order: 1
+.searchBar {
+  position: absolute;
+  top: 20px;
+  left: 250px;
 }
-
+.sideBar {
+  position: absolute;
+  width: 225px;
+  height: 100vh;
+}
+.statistics {
+  position: relative;
+  top: 50px;
+  left: 225px;
+  height: 80vh;
+  width: 80vw;
+}

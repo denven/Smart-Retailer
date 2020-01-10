@@ -1,0 +1,60 @@
+{
+  "faces" :[
+    {
+      "id": 1,
+      "faceId": 1,
+      "sex": "male",
+      "age_min": 12,
+      "age_max": 18,
+      "video_id": 1
+    },
+    {
+      "id": 2,
+      "faceId": 2,
+      "sex": "female",
+      "age_min": 15,
+      "age_max": 124,
+      "video_id": 1
+    },
+    {
+      "id": 3,
+      "faceId": 3,
+      "sex": "male",
+      "age_min": 20,
+      "age_max": 32,
+      "video_id": 1
+    },
+    {
+      "id": 4,
+      "faceId": 4,
+      "sex": "male",
+      "age_min": 15,
+      "age_max": 23,
+      "video_id": 1
+    },
+    {
+      "id": 5,
+      "faceId": 5,
+      "sex": "female",
+      "age_min": 15,
+      "age_max": 21,
+      "video_id": 1
+    },
+    {
+      "id": 6,
+      "faceId": 6,
+      "sex": "female",
+      "age_min": 15,
+      "age_max": 21,
+      "video_id": 2
+    },
+    {
+      "id": 7,
+      "faceId": 7,
+      "sex": "female",
+      "age_min": 15,
+      "age_max": 21,
+      "video_id": 2
+    }
+  ]
+}

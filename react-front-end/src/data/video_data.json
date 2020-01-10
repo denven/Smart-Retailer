@@ -1,0 +1,23 @@
+{
+  "videos": 
+    [
+      {
+        "id": 1,
+        "name": "Day one",
+        "starts_at": 0,
+        "duration": 1000,
+        "upload_at": 1100,
+        "bucket_id": "chengwen_vids",
+        "url_addr": "www.s3.com/chengwen_vids"
+      },
+      {
+        "id": 2,
+        "name": "Day Two",
+        "starts_at": 0,
+        "duration": 1000,
+        "upload_at": 1200,
+        "bucket_id": "chengwen_vids",
+        "url_addr": "www.s3.com/chengwen_vids2"
+      }
+    ]
+}

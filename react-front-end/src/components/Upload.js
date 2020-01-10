@@ -1,6 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { FormHelperText } from '@material-ui/core';
+import axios from 'axios';
 
 const useStyles = makeStyles({
   root: {
@@ -10,13 +10,24 @@ const useStyles = makeStyles({
     boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
     color: 'white',
     height: 30,
-    width: 300,
+    width: '225 px',
     padding: '0 30px',
     order: 1
   },
 });
 
-export function Dashboard() {
+const uploadAction = (file) =>{
+  let formData = new FormData();
+  let imagefile = document.querySelector('#file');
+  formData.append("image", imagefile.files[0]);
+  axios.post('upload_file', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+  })
+
+}
+export default function upload(props) {
   const classes = useStyles();
   return (
     <>

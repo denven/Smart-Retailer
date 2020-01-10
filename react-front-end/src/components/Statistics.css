@@ -1,24 +1,51 @@
-.container {
+.pie {
+  width: 250 px;
+  height: 250 px;
+  border: 2px solid;
+}
+
+.statContainer {
   display: flex;
-  order: 2;
-  width: 500 px;
-  height: 500 px;
+  flex-direction: column;
+  height: 94vh;
+  width: 83vw;
+}
+.upperRow {
+  display: flex;
+  height: 40%;
+  width: 100%;
+  order: 0;
+}
+.bottomRow{
+  display: flex;
+  height: 64%;
+  width: 100%;
+}
+.bottomLeft {
+  display: flex;
+  flex-direction: column;
+  height: 50%;
+  width: 33%;
+  order: 0;
 }
 
 .bar {
-  display: flex;
-  order: 6;
-  width: 250 px;
-  height: 250 px;
-  border-style: solid;
-  border-width: 2px;
+  width: 66%;
+  height: 66%;
+  order: 1;
 }
 
-.pie {
-  display: flex;
-  order: 5;
-  width: 250 px;
-  height: 250 px;
-  border-style: solid;
-  border-width: 2px;
+.videoContainer {
+  height: 100%;
+  width: 33%;
+}
+
+.video {
+  height: 100%;
+  width: 100%;
+}
+
+.numberStats {
+  height: 100%;
+  width: 66%;
 }

@@ -1,0 +1,17 @@
+{
+  "visits" : 
+    [
+      {
+        "id": 1,
+        "timeStamp": 12,
+        "count": 18,
+        "video_id": 1
+      },
+      {
+        "id": 2,
+        "timeStamp": 15,
+        "count": 34,
+        "video_id": 2
+      }
+    ]
+}

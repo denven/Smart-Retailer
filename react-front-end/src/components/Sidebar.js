@@ -2,17 +2,17 @@ import React, {useState} from 'react';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import { makeStyles } from '@material-ui/core/styles';
+import videosList from '../data/video_data.json';
 
 const useStyles = makeStyles(theme => ({
   root: {
+    position: "absolute",
     backgroundColor: theme.palette.background.paper,
-    display: 'flex',
-    width: 251,
-    order: 0
+    width: "225 px",
   },
   tabs: {
     borderRight: `2px solid ${theme.palette.divider}`,
-    height: 870
+    height: 900
   },
   logo: {
     fontSize: 25,
@@ -22,39 +22,36 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function VerticalTabs() {
-  const {state, setState} = useState("item one");
-
+export default function VerticalTabs(props) {
   const classes = useStyles();
+  const videos = videosList.videos;
   const [value, setValue] = React.useState(0);
-
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    props.changeView(newValue);
   };
 
+  console.log(props, 'props');
   return (
     <div className={classes.root}>
-      <Tabs
+     
+        <Tabs
         orientation="vertical"
         variant="scrollable"
         value={value}
         onChange={handleChange}
-        aria-label="Vertical tabs example"
         className={classes.tabs}
       >
-        <Tab className ={classes.logo} label="Smart-Retailer" disabled>
-        </Tab>
-        <Tab className = {classes.tab} label="Upload"  />
-        <Tab className = {classes.tab} label="Search">
-          <input type="search" name="googlesearch"/>
-        </Tab>
-        <Tab className = {classes.tab} label="Item One"  />
-        <Tab className = {classes.tab} label="Item Two"  />
-        <Tab className = {classes.tab} label="Item Three"  />
-        <Tab className = {classes.tab} label="Item Four"  />
-        <Tab className = {classes.tab} label="Item Five"  />
-        <Tab className = {classes.tab} label="Item Six"  />
-        <Tab className = {classes.tab} label="Item Seven"  />
+        <Tab className ={classes.logo} label="Smart-Retailer"/>
+        <Tab className = {classes.tab} label="Upload" />
+        {videos.map(video => (
+        <Tab className = {classes.tab} 
+        label={video.name}
+        key={video.id} 
+        
+        />
+        ))}
+
       </Tabs>
     </div>
   );

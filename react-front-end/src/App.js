@@ -1,53 +1,73 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
-import ReactDOM from 'react-dom';
-import { makeStyles } from '@material-ui/core/styles';
 import VerticalTabs from './components/Sidebar';
-import { Dashboard } from './components/Dashboard';
+import Upload from './components/Upload';
 import Statistics from './components/Statistics';
+import SearchBar from './components/SearchBar';
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    flexGrow: 1,
-    backgroundColor: theme.palette.background.paper,
-    display: 'flex',
-    width: 300,
-  }
-}));
+export default function App (){
+  const [state, setState] = useState(0);
 
-class App extends Component {
-  
-  constructor(props) {
-    super(props)
-    this.state = {
-      message: 'Click the button to load data!',
-    }
-  }
-  
-  fetchData = () => {
-    axios.get('/api/data') // You can simply make your requests to "/api/whatever you want"
-    .then((response) => {
-      // handle success
-      console.log(response.data) // The entire response from the Rails API
-
-      console.log(response.data.message) // Just the message
-      this.setState({
-        message: response.data.message
-      });
-    }) 
+  const setView = (view) =>{
+    setState(view);
   }
 
-  render() {
+  if (state === 0) {
     return (
       <>
         <div className='container'>
-          <VerticalTabs/>
-          <Statistics/>
+          <div className="sideBar">
+            <VerticalTabs changeView={setView}/>
+          </div>
+          <div className="searchBar">
+            <SearchBar/>
+          </div>
+          <div className="statistics">
+          </div>
         </div>
       </>
-    );
+    )
+  } else if (state === 1){
+    return (
+      <>
+        <div className='container'>
+          <div className="sideBar">
+            <VerticalTabs changeView={setView}/>
+          </div>
+          <div className="searchBar">
+            <SearchBar/>
+          </div>
+          <div className="statistics">
+            <Upload/>
+          </div>
+        </div>
+      </>
+    )
+  } else {
+    //axios get stats from backend api
+    // axios.get(`api/stats/${state}`)
+    // .then((statistics => {
+      return (
+        <>
+          <div className='container'>
+            <div className="sideBar">
+              <VerticalTabs changeView={setView}/>
+            </div>
+            <div className="searchBar">
+              <SearchBar/>
+            </div>
+            <div className="statistics">
+              <Statistics 
+              // stats={statistics}
+              />
+            </div>
+          </div>
+        </>
+      );
+    // }))
+    // .catch((error) => {
+    //   console.log(error);
+    // })
   }
 }
-
-export default App;
