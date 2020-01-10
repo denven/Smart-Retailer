@@ -18,28 +18,31 @@ const useStyles = makeStyles({
 
 const uploadAction = () =>{
   let formData = new FormData();
-  document.getElementById('videoSubmit').addEventListener("click", function(event){
-    event.preventDefault();
-  });
-  // let videoFile = document.querySelector('#myFile');
-  // formData.append("video", videoFile.files[0], "test.mp4");
-  // axios.post(`/api/`, formData, {
-  //     headers: {
-  //       'Content-Type': 'multipart/form-data'
-  //     }
-  // }).catch((err) => {
-  //   console.log(err , " also the name of the video is " + formData.name)
-  // })
+  let videoFiles = document.querySelector('#myFile');  
+  let video = videoFiles.files[0];
+  formData.append("video", video);
+  
+  axios.post(`/api/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+  }).catch((err) => {
+    console.log(err , " also the name of the video is " + formData)
+  })
 
 }
 export default function upload() {
   const classes = useStyles();
+  
+  const handleSubmit = event => {
+    event.preventDefault();
+  }
   return (
     <>
       <div>
-        <form id="video_upload">
+        <form id="video_upload" onSubmit={handleSubmit}>
           <input type="file" className={classes.root} id="myFile"/>
-          <input type="submit" id="videoSubmit" className={classes.root} onclick={uploadAction}/>
+          <input type="submit" id="videoSubmit" className={classes.root} onClick={uploadAction}/>
         </form>
       </div>
     </>

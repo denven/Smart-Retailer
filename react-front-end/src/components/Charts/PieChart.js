@@ -36,7 +36,7 @@ export default function MyResponsivePie ({ data = [
         radialLabelsLinkColor={{ from: 'color' }}
         slicesLabelsSkipAngle={10}
         slicesLabelsTextColor="#333333"
-        animate={true}
+        animate={false}
         motionStiffness={90}
         motionDamping={15}
         defs={[
@@ -73,26 +73,26 @@ export default function MyResponsivePie ({ data = [
                 id: 'lines'
             }
         ]}
-        legends={[
-            {
-                anchor: 'bottom',
-                direction: 'row',
-                translateY: 56,
-                itemWidth: 100,
-                itemHeight: 18,
-                itemTextColor: '#999',
-                symbolSize: 18,
-                symbolShape: 'circle',
-                effects: [
-                    {
-                        on: 'hover',
-                        style: {
-                            itemTextColor: '#000'
-                        }
-                    }
-                ]
-            }
-        ]}
+        // legends={[
+        //     {
+        //         anchor: 'bottom',
+        //         direction: 'row',
+        //         translateY: 56,
+        //         itemWidth: 100,
+        //         itemHeight: 18,
+        //         itemTextColor: '#999',
+        //         symbolSize: 18,
+        //         symbolShape: 'circle',
+        //         effects: [
+        //             {
+        //                 on: 'hover',
+        //                 style: {
+        //                     itemTextColor: '#000'
+        //                 }
+        //             }
+        //         ]
+        //     }
+        // ]}
     />
   )
 }
