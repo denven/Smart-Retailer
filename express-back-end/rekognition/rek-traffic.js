@@ -118,10 +118,12 @@ async function startTrackingAnalysis (videoKey) {
   try {
 
     // await deleteSQSHisMessages(APP_REK_SQS_NAME);
-    let task = await startPersonTracking(videoKey);
+    let job = await startPersonTracking(videoKey);
+    let task = { JobName: 'PersonTrack', JobId: job.JobId };  
+
     Chalk(HINT(`Starts Job: Person Tracking, JobId: ${task.JobId}`));   
 
-    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task.JobId);
+    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task);
     console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
     
     let allTrackedPersons = await getPersonsTracking(task.JobId, videoKey);
@@ -138,6 +140,8 @@ async function startTrackingAnalysis (videoKey) {
   }
 
   console.timeEnd('Job Tracking Analysis');
+  console.timeEnd(`Video Analysis time consumed for ${videoKey}`);
+
 };
 
 

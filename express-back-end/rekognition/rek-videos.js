@@ -16,6 +16,10 @@ const { getPersonDetailsFromVideo, getPersonRecuringAmongVideos } = require('./r
 const { startTrackingAnalysis } = require('./rek-traffic');
 const { cropFacesFromLocalVideo } = require('../filemanager/videos');
 
+/**
+ * Call aws rekognition API to detect all faces(not person) in the video
+ * @param {String} videoKey 
+ */
 const startFaceDetection = (videoKey) => {
 
   return new Promise((resolve, reject) => {
@@ -41,13 +45,10 @@ const startFaceDetection = (videoKey) => {
 
 };
 
-// Note: There is no faceId in this returned data.
-// All attributes of faces are below, we only care about demographic realted ones
-// "Face": { "Confidence", "Eyeglasses", "Sunglasses", "Gender", "Landmarks",
-//           "Pose", "Emotions", "AgeRange", "EyesOpen", "BoundingBox", "Smile",
-//           "MouthOpen", "Quality", "Mustache", "Beard" }
-// Emotions Values: 8 types (except "Unknown")
-// HAPPY | SAD | ANGRY | CONFUSED | DISGUSTED | SURPRISED | CALM | UNKNOWN | FEAR
+/**
+ * Get the keys and values we need from FaceDetails Object 
+ * @param {Object: FaceDetails} faceData 
+ */
 const getFacesDetails = (faceData) => {
   
   let facesDetails = [];
@@ -73,13 +74,14 @@ async function startVideoPreAnalysis (videoKey) {
   console.time('Pre-Analysis Job');
 
   try {
-    let task = await startFaceDetection(videoKey);
+    let job = await startFaceDetection(videoKey);
+    let task = { JobName: 'FaceDetection', JobId: job.JobId };  
 
     // TODO: when total number of faces > 1000 for the long duration videos
     const params = { JobId: task.JobId, MaxResults: 1000};  
     Chalk(HINT(`Starts Job: Face Detection, JobId: ${task.JobId}`));   
           
-    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task.JobId);  
+    let status = await queryJobStatusFromSQS(APP_REK_SQS_NAME, task);  
     console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
 
     let data = await rekognition.getFaceDetection(params).promise();
@@ -107,8 +109,11 @@ async function startVideoPreAnalysis (videoKey) {
 }
 
 async function videoRekognitionMain (videoKey) {
- 
-  Chalk(HINT(`Initilization for Video Analysis: ${videoKey}`));
+
+  console.time(`Video Analysis time consumed for ${videoKey}`);
+  Chalk(INFO(`Video Analysis for ${videoKey} Started at:`, (new Date()).toLocaleString()));
+
+  Chalk(HINT(`Initilization ... `));
   await deleteSQSHisMessages(APP_REK_SQS_NAME);
 
   // This task takes too much time, let's start it at first
@@ -133,9 +138,9 @@ async function videoRekognitionMain (videoKey) {
 //  const s3_video_key = 'sample-3.mp4';  // test video
 // const s3_video_key = 'VID_20200106_191848.mp4';  // test video
 // const s3_video_key = 'VID_20200106_191924.mp4';  // test video
-// const s3_video_key = 'sample-0.mp4';  // test video
-const s3_video_key = 'sample-1.mp4';  // test video
-// const s3_video_key = 'sample-3.mp4';  // test video
+// const s3_video_key = 'sample-1.mp4';  // test video
+// const s3_video_key = 'sample-2.mp4';  // test video
+const s3_video_key = 'sample-3.mp4';  // test video
 
 videoRekognitionMain(s3_video_key);
 

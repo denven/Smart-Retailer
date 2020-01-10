@@ -101,7 +101,7 @@ const getDistinctPersonsVisitsData = (personsFaces, curVidName) => {
   let allPersons = [];  
   let person = {Index: '', Timestamp: '', HisVisits: []};
 
-  console.log(`Search for recuring people from other videos`)
+  console.log(`Searching for recuring people from other videos...`)
   for (const item of personsFaces.Persons) {   
     
     if(item.Person.Index !== oldIndex) { 

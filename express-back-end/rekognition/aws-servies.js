@@ -3,8 +3,6 @@ const path = require("path");
 const PATH = path.resolve(__dirname, "../.env");
 require('dotenv').config({ path: PATH });
 
-const inspect = require('util').inspect;
-
 const AWS_DEFAULT_REGION = 'us-west-2';
 const APP_VIDEO_BUCKET_NAME = 'retailer-videos';
 const APP_FACES_BUCKET_NAME = 'retailer-faces';
@@ -26,18 +24,17 @@ const s3 = new AWS.S3();
 const sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 const rekognition = new AWS.Rekognition();
 
-async function awsServiceStart(awsTask) {
+async function awsServiceStart() {
 
-  console.log(`\n\n\n\nSet default AWS service region: ${AWS_DEFAULT_REGION}`);  
+  console.log(`\n\n\n\nDefault AWS service region: ${AWS_DEFAULT_REGION}`);  
   
   AWS.config.getCredentials((err) => {
-    console.log("Check dev credential: ");
-    if (err) {
-      console.log(err.stack);
-    } else {
-      console.log("Access Key:", AWS.config.credentials.accessKeyId);
-      console.log("Secret Access Key:", AWS.config.credentials.secretAccessKey);
-      // console.log("Region:", AWS.config.region);
+    if (err) { console.log(err.stack); } 
+    else {
+      console.log("Check dev credential passed");
+    //   console.log("Access Key:", AWS.config.credentials.accessKeyId);
+    //   console.log("Secret Access Key:", AWS.config.credentials.secretAccessKey);
+    // console.log("Region:", AWS.config.region);
     }
   });
 
@@ -65,17 +62,13 @@ async function awsServiceStart(awsTask) {
   s3ListObjects = s3.listObjects(bucketParams).promise();
 
   await Promise.all([s3ListBuckets, s3ListObjects])
-  .then((data) => {
-    console.log("List All S3 buckets:");
-    console.log(data[0].Buckets);
-    console.log("List Objects in Video Bucket:");
-    console.log(data[1]);
-  })
+  // .then((data) => {
+  //   console.log("List All S3 buckets:");
+  //   console.log(data[0].Buckets);
+  //   console.log("List Objects in Video Bucket:");
+  //   console.log(data[1]);
+  // })
   .catch((err) => console.log(err.stack));
-
-  if(arguments.length > 1) {
-    awsTask(); // call task passed in
-  }
 
 };
 
@@ -164,7 +157,7 @@ async function deleteSQSHisMessages(queName) {
     MessageAttributeNames: ["All"],
     QueueUrl: sqsFullUrl,
     VisibilityTimeout: 30,  // NOTE: DO NOT SET THIS TOO LARGE!!!
-    WaitTimeSeconds: 20     // test timeout
+    WaitTimeSeconds: 5     // test timeout
   };
 
   console.log('Checking history SQS messages...');
@@ -180,9 +173,9 @@ async function deleteSQSHisMessages(queName) {
         if(data.Messages) {          
           console.log(`Found ${data.Messages.length} history messages in SQS`);
           for(const msg of data.Messages) {
-            if (msgContent.Status === 'SUCCEEDED') {
-              msgEntries.push({ Id: msg.MessageId, ReceiptHandle: msg.ReceiptHandle});
-            }
+            // if (msgContent.Status === 'SUCCEEDED') {
+              msgEntries.push({ Id: msg.MessageId, ReceiptHandle: msg.ReceiptHandle });
+            // }
           };
 
         } else {   
@@ -210,13 +203,14 @@ async function deleteSQSHisMessages(queName) {
 
 }
 
+
 /**
  * Query the Rekognition Job status from SQS message content.
  * 
  * @param {String} queName 
- * @param {String} jobId 
+ * @param {Object} task {JobName, JobId}
  */
-async function queryJobStatusFromSQS(queName, jobId) {
+async function queryJobStatusFromSQS(queName, task) {
 
   let sqsFullUrl = await getRekSQSMessageUrl(queName);
   const params = {
@@ -235,18 +229,23 @@ async function queryJobStatusFromSQS(queName, jobId) {
         if(data.Messages) {
           for(const msg of data.Messages) {
             const msgContent = JSON.parse(JSON.parse(msg.Body).Message);
-            if (msgContent.JobId === jobId) {
+            if (msgContent.JobId === task.JobId) {
+
               if (msgContent.Status === 'SUCCEEDED') {
-                console.log(`Rekognition Job Status: ${msgContent.Status}, JobId: ${jobId}`);
+                console.log(`Rekognition Job Status: ${msgContent.Status}, JobName: ${task.JobName}`);
+
+                // Delete the message right away when we get a successful job status
+                sqs.deleteMessage( { QueueUrl: sqsFullUrl, ReceiptHandle: msg.ReceiptHandle }, 
+                  (err, data) => { if(err) console.log(err, err.stack) });
                 jobDone = true;
               } else {
-                console.log(`Rekognition Job Status: ${msgContent.Status}, continuing... JobId: ${jobId}`);
+                console.log(`Rekognition Job Status: ${msgContent.Status}, continue polling... JobName: ${task.JobName}`);
               }
             }
           } // end of for  
         } else {
-          console.log(`Timeout, failed to get JobStatus msg in ${params.WaitTimeSeconds}\
-           seconds from SQS, try another time...`);
+          console.log(`Timeout when getting JobStatus msg in ${params.WaitTimeSeconds} seconds from SQS, try another time...\
+          JobName: ${task.JobName}, `);
         }
       })
     }
