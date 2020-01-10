@@ -13,6 +13,7 @@ const Chalk = console.log;
 const { rekognition, APP_VIDEO_BUCKET_NAME, APP_ROLE_ARN, APP_SNS_TOPIC_ARN,
   APP_REK_SQS_NAME, deleteSQSHisMessages, queryJobStatusFromSQS } = require('./aws-servies');
 const { getTrackedTraffic } = require('./db-data');
+const db = require('../database/db');
 
 const startPersonTracking = (videoKey) => {
 
@@ -116,7 +117,6 @@ async function startTrackingAnalysis (videoKey) {
   console.time('Job Tracking Analysis');
 
   try {
-
     // await deleteSQSHisMessages(APP_REK_SQS_NAME);
     let job = await startPersonTracking(videoKey);
     let task = { JobName: 'PersonTrack', JobId: job.JobId };  
@@ -131,12 +131,13 @@ async function startTrackingAnalysis (videoKey) {
     console.log(vidPersonTraffic);
 
     Chalk(INFO('Job Person Tracking Analysis: Done!'));
+    db.updateVideoAnaStatus(videoKey, 1);
 
     // return allTrackedPersons;
 
   } catch(error) {
-
     Chalk(ERROR(`Job Person Tracking: Failed to track persons in video ${videoKey},`, error.stack));
+    db.updateVideoAnaStatus(videoKey, -1);
   }
 
   console.timeEnd('Job Tracking Analysis');

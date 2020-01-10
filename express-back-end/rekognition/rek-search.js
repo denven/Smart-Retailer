@@ -18,6 +18,7 @@ const { rekognition, APP_VIDEO_BUCKET_NAME, APP_REK_SQS_NAME, APP_ROLE_ARN, APP_
         APP_FACES_BUCKET_NAME, APP_REK_DB_COLLECTION_ID, queryJobStatusFromSQS, addFacesIntoCollection 
       } = require('./aws-servies');
 const { getAgeRangeCategory, getMostConfidentEmotion } = require('./db-data');
+const db = require('../database/db');
 
 /**
  * Return true when collection is empty
@@ -232,11 +233,12 @@ async function getPersonDetailsFromVideo (videoKey, collectionId, detailedFaces)
 
     Chalk(INFO('Job Person Search Analysis: Done!'));
     console.timeEnd('Job Person Details Analysis');
-
+    db.updateVideoAnaStatus(videoKey, 1);
     // return persons; 
 
   } catch (error) {
     Chalk(ERROR(`Job Person Search: Failed to search persons in video ${videoKey},`, error.stack));
+    db.updateVideoAnaStatus(videoKey, -1);
   }
    
 };
@@ -246,6 +248,7 @@ async function getPersonRecuringAmongVideos (videoKey, collectionId) {
 
   if(await isCollectionEmpty(collectionId)) {
     Chalk(HINT(`No Recuring analysis needed as ${videoKey} is the first video`));   
+    db.updateVideoAnaStatus(videoKey, 1);
     return;
   }
 
@@ -264,11 +267,13 @@ async function getPersonRecuringAmongVideos (videoKey, collectionId) {
 
     Chalk(INFO('Job Person Recuring Search: Done!'));
     console.timeEnd('Job Person Recuring Analysis');
+    db.updateVideoAnaStatus(videoKey, 1);
 
     // return persons; 
 
   } catch (error) {
     Chalk(ERROR(`Job Person Recuring Search: Failed to search persons in video ${videoKey},`, error.stack));
+    db.updateVideoAnaStatus(videoKey, -1);
   }
 
 };

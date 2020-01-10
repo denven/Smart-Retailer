@@ -15,6 +15,7 @@ const { s3, rekognition,
 const { getPersonDetailsFromVideo, getPersonRecuringAmongVideos } = require('./rek-search');
 const { startTrackingAnalysis } = require('./rek-traffic');
 const { cropFacesFromLocalVideo } = require('../filemanager/videos');
+const db = require('../database/db');
 
 /**
  * Call aws rekognition API to detect all faces(not person) in the video
@@ -98,8 +99,14 @@ async function startVideoPreAnalysis (videoKey) {
     console.timeEnd('Pre-Analysis Job');
 
     return new Promise((resolve, reject) => {
-      if(detailedFaces.length > 0) resolve(detailedFaces);
-      else reject(`Error when pre-analyzing the video, ${videoKey}`);
+      if(detailedFaces.length > 0) {
+        db.updateVideoAnaStatus(videoKey, 1);
+        resolve(detailedFaces);
+      }
+      else {
+        db.updateVideoAnaStatus(videoKey, -1);
+        reject(`Error when pre-analyzing the video, ${videoKey}`);
+      }
     });
 
   } catch(error) {  
@@ -107,8 +114,12 @@ async function startVideoPreAnalysis (videoKey) {
   }
     
 }
-
-async function videoRekognitionMain (videoKey) {
+/**
+ * Entry/Start function used to do a single video analysis by aws rekognition
+ * 
+ * @param {String} videoKey: video filename without path 
+ */
+async function startVideoRekognition (videoKey) {
 
   console.time(`Video Analysis time consumed for ${videoKey}`);
   Chalk(INFO(`Video Analysis for ${videoKey} Started at:`, (new Date()).toLocaleString()));
@@ -142,6 +153,6 @@ async function videoRekognitionMain (videoKey) {
 // const s3_video_key = 'sample-2.mp4';  // test video
 const s3_video_key = 'sample-3.mp4';  // test video
 
-videoRekognitionMain(s3_video_key);
+// startVideoRekognition(s3_video_key);
 
-module.exports = { videoRekognitionMain };
+module.exports = { startVideoRekognition };
