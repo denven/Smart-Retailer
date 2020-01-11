@@ -1,16 +1,19 @@
 import React from 'react';
 
 
-export default function SingleDataDisplay(props){
+export default function SingleDataPoint(props){
   return(
     <>
       <div>
           <div className="upperText">
             <p>
-              Number of recurring customers
+              Recurring customers
             </p>
           </div>
         <div className="dataDisplay">
+          <p>
+            50
+          </p>
         </div>
       </div>
     </>

@@ -64,12 +64,13 @@
 .singleData {
   display: flex;
   flex-direction: row;
+  text-align: center;
   width: 66%;
   height: 100%;
 }
 .singles {
-  width: 30%;
+  width: 33%;
   height: 100%;
-  padding: 25px 0px 0px 0px;
+  padding: 50px 0px 0px 0px;
   margin: 5px;
 }

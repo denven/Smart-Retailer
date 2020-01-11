@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import { makeStyles } from '@material-ui/core/styles';
@@ -26,9 +26,9 @@ const useStyles = makeStyles(theme => ({
 
 export default function VerticalTabs(props) {
   const classes = useStyles();
-  const videos = videosList.videos;
   const [value, setValue] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  let videos = videosList.videos;
   // const videosObjectLookup = {}
 
   // videos.map(video => {
