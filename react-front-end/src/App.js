@@ -35,7 +35,7 @@ export default function App (){
           <div className="sideBar">
             <VerticalTabs changeView={setView}/>
           </div>
-          <div className="statistics">
+          <div className="upload">
             <Upload/>
           </div>
         </div>

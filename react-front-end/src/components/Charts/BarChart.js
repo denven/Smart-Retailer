@@ -2,9 +2,10 @@ import React from 'react';
 import { ResponsiveBar } from '@nivo/bar'
 
 
-export default function MyResponsiveBar ({ data = [
+export default function MyResponsiveBar ({ data = 
+  [
   {
-    "day": "Monday",
+    "Time": "4",
     "customers": 100,
     "customersColor": "hsl(19, 70%, 50%)",
     "male": 65,
@@ -15,18 +16,7 @@ export default function MyResponsiveBar ({ data = [
     "recurringCustomerColor": "hsl(114, 70%, 50%)",
   },
   {
-    "day": "Tuesday",
-    "customers": 145,
-    "customersColor": "hsl(36, 70%, 50%)",
-    "male": 40,
-    "maleColor": "hsl(303, 70%, 50%)",
-    "female": 105,
-    "femaleColor": "hsl(314, 70%, 50%)",
-    "recurringCustomer": 25,
-    "recurringCustomerColor": "hsl(43, 70%, 50%)",
-  },
-  {
-    "day": "Wednesday",
+    "Time": "8",
     "customers": 93,
     "customersColor": "hsl(122, 70%, 50%)",
     "male": 33,
@@ -37,7 +27,7 @@ export default function MyResponsiveBar ({ data = [
     "recurringCustomerColor": "hsl(19, 70%, 50%)",
   },
   {
-    "day": "Thursday",
+    "Time": "12",
     "customers": 159,
     "customersColor": "hsl(17, 70%, 50%)",
     "male": 120,
@@ -48,7 +38,7 @@ export default function MyResponsiveBar ({ data = [
     "recurringCustomerColor": "hsl(360, 70%, 50%)",
   },
   {
-    "day": "Friday",
+    "Time": "16",
     "customers": 73,
     "customersColor": "hsl(229, 70%, 50%)",
     "male": 42,
@@ -59,7 +49,7 @@ export default function MyResponsiveBar ({ data = [
     "recurringCustomerColor": "hsl(229, 70%, 50%)",
   },
   {
-    "day": "Saturday",
+    "Time": "20",
     "customers": 129,
     "customersColor": "hsl(259, 70%, 50%)",
     "male": 9,
@@ -70,7 +60,7 @@ export default function MyResponsiveBar ({ data = [
     "recurringCustomerColor": "hsl(344, 70%, 50%)",
   },
   {
-    "day": "Sunday",
+    "Time": "24",
     "customers": 94,
     "customersColor": "hsl(307, 70%, 50%)",
     "male": 60,
@@ -87,7 +77,7 @@ export default function MyResponsiveBar ({ data = [
         ['male', 
         'female', 
         ]}
-      indexBy="day"
+      indexBy="Time"
       margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
       padding={0.3}
       groupMode="stacked"
@@ -133,7 +123,7 @@ export default function MyResponsiveBar ({ data = [
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 0,
-          legend: 'day',
+          legend: 'Time',
           legendPosition: 'middle',
           legendOffset: 32
       }}

@@ -38,10 +38,10 @@ export default function VerticalTabs(props) {
   // for (let i = 2; i < videos.length; i++) {
 
   // }
-  axios.get("/videos/")
-  .then(res => {
-    videos = res;
-  })
+  // axios.get("/videos/")
+  // .then(res => {
+  //   videos = res;
+  // })
   const handleChange = (event, newValue) => {
     setValue(newValue);
     props.changeView(newValue);

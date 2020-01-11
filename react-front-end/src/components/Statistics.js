@@ -5,6 +5,7 @@ import PieChart from './Charts/PieChart';
 import VideoPlayer from './Charts/VideoPlayer';
 import axios from 'axios';
 import SingleDataPoint from './Charts/SingelDataPoint';
+import LineChart from './Charts/LineChart';
 
 export default function Statstics (props) {
   let recurs;
@@ -36,28 +37,28 @@ export default function Statstics (props) {
           <VideoPlayer stat={props.stat}/>
         </div>
         <div className="singleData">
-          <div className="singles">
-          <SingleDataPoint/>
+          <div className="pie">
+            <PieChart stat={props.stat}/>
           </div>
-          <div className="singles">
-          <SingleDataPoint/>
-          </div>
-          <div className="singles">
-          <SingleDataPoint/>
+          <div className="pie">
+            <PieChart stat={props.stat}/>
           </div>
         </div>
       </div>
       <div className="bottomRow">
         <div className="bottomLeft">
-          <div className="bottomLeftSplit">
-            <PieChart stat={props.stat}/>
+          <div className="singles">
+          <SingleDataPoint/>
           </div>
-          <div className="bottomLeftSplit">
-            <PieChart stat={props.stat}/>
+          <div className="singles">
+          <SingleDataPoint/>
+          </div>
+          <div className="singles">
+          <SingleDataPoint/>
           </div>
         </div>
         <div className="bottomRight">
-        <BarChart stat={props.stat}/>
+          <LineChart stat={props.stat}/>
         </div>
       </div>
     </div>

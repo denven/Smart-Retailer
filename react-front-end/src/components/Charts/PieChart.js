@@ -19,7 +19,7 @@ export default function MyResponsivePie ({ data = [
   return(
     <ResponsivePie
         data={data}
-        margin={{ top: 20, right: 10, bottom: 20, left: 10 }}
+        margin={{ top: 25, right: 25, bottom: 25, left: 25 }}
         innerRadius={0.4}
         padAngle={0}
         cornerRadius={0}
@@ -73,26 +73,6 @@ export default function MyResponsivePie ({ data = [
                 id: 'lines'
             }
         ]}
-        // legends={[
-        //     {
-        //         anchor: 'bottom',
-        //         direction: 'row',
-        //         translateY: 56,
-        //         itemWidth: 100,
-        //         itemHeight: 18,
-        //         itemTextColor: '#999',
-        //         symbolSize: 18,
-        //         symbolShape: 'circle',
-        //         effects: [
-        //             {
-        //                 on: 'hover',
-        //                 style: {
-        //                     itemTextColor: '#000'
-        //                 }
-        //             }
-        //         ]
-        //     }
-        // ]}
     />
   )
 }

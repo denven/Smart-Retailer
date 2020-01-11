@@ -1,20 +1,7 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
 import axios from 'axios';
-
-const useStyles = makeStyles({
-  root: {
-    background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-    border: 0,
-    borderRadius: 3,
-    boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-    color: 'white',
-    height: 30,
-    width: '225 px',
-    padding: '0 30px',
-    order: 1
-  },
-});
+import 'react-dropzone-uploader/dist/styles.css'
+import Dropzone from 'react-dropzone-uploader'
 
 const uploadAction = () =>{
   let formData = new FormData();
@@ -31,20 +18,39 @@ const uploadAction = () =>{
   })
 }
 
-export default function upload() {
-  const classes = useStyles();
+// export default function upload() {
+//   const classes = useStyles();
   
-  const handleSubmit = event => {
-    event.preventDefault();
-  }
+//   const handleSubmit = event => {
+//     event.preventDefault();
+//   }
+//   return (
+//     <>
+//       <div>
+//         <form id="video_upload" onSubmit={handleSubmit}>
+//           <input type="file" className={classes.root} id="myFile"/>
+//           <input type="submit" id="videoSubmit" className={classes.root} onClick={uploadAction}/>
+//         </form>
+//       </div>
+//     </>
+//   )
+// }
+export default function MyUploader (){
+  // specify upload params and url for your files
+  const getUploadParams = ({ meta }) => { return { url: 'https://httpbin.org/post' } }
+  
+  // called every time a file's `status` changes
+  const handleChangeStatus = ({ meta, file }, status) => { console.log(status, meta, file) }
+  
+  // receives array of files that are done uploading when submit button is clicked
+  const handleSubmit = (files) => { console.log(files.map(f => f.meta)) }
+ 
   return (
-    <>
-      <div>
-        <form id="video_upload" onSubmit={handleSubmit}>
-          <input type="file" className={classes.root} id="myFile"/>
-          <input type="submit" id="videoSubmit" className={classes.root} onClick={uploadAction}/>
-        </form>
-      </div>
-    </>
+    <Dropzone
+      getUploadParams={getUploadParams}
+      onChangeStatus={handleChangeStatus}
+      onSubmit={handleSubmit}
+      accept="image/*,audio/*,video/*"
+    />
   )
 }
