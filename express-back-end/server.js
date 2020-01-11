@@ -3,11 +3,10 @@ const app = express();
 const bodyParser = require('body-parser');
 const PORT = 8080;
 
-const knex = require('./database/db').knex;
 const db = require('./database/db');
 
 
-const awsSrv = require('./rekognition/aws-servies');
+const { awsServiceStart } = require('./rekognition/aws-servies');
 
 // Express Configuration
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -19,7 +18,7 @@ app.use("/", appRoutes); // mount all the routes to root path (no other division
 
 
 db.testDBConnection();
-
+awsServiceStart();
 
 app.listen(PORT, () => {
   console.log(`Express seems to be listening on port ${PORT} so that's pretty good 👍`);

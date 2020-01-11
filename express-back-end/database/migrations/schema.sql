@@ -34,19 +34,19 @@ CREATE TABLE faces (
 CREATE TABLE recurs (
   id SERIAL PRIMARY KEY NOT NULL,
   is_recuring BOOLEAN NOT NULL,
-  vist_date INTEGER NOT NULL,   /* average days interval of 2 visits: 0 when is_recuring is false */
+  visit_date INTEGER NOT NULL,   /* average days interval of 2 visits: 0 when is_recuring is false */
   video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE
 );
 
 CREATE TABLE persons (
   id SERIAL PRIMARY KEY NOT NULL,
-  stay_duration TIMESTAMP NOT NULL,  /* seconds */
+  stay_duration INTEGER NOT NULL,  /* seconds */
   video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE
 );
 
 CREATE TABLE traffic (
   id SERIAL PRIMARY KEY NOT NULL,
-  timestamp INTEGER NOT NULL,  /* seconds */
+  timestamp INTEGER NOT NULL,
   count INTEGER NOT NULL,
   video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE
 );

@@ -190,20 +190,22 @@ const getPersonsWithDetails = (persons, faceDetails) => {
 
     for(const person of persons) {
       if (_.isEqual(face.Face.BoundingBox, person.BoundingBox)) {
+
+        // change the keys string according to db table keys name convention
         detailedPersons.push( {
           // the person.attributes below come from searchFaces in collection
-          Index: person.Index,
-          Timestamp: person.Timestamp,
-          ExternalImageId: person.ExternalImageId,
-          FaceId: person.FaceId,
-          ImageId: person.ImageId,
-          Confidence: person.Confidence,
+          // index: person.Index,
+          // timestamp: person.Timestamp,
+          // face_id: person.FaceId,
+          // image_id: person.ImageId,
+          // confidence: person.Confidence,
+          external_id: person.ExternalImageId,
 
           // the face.attributes below come from faceDetection(no collection compared)
-          Gender: face.Face.Gender.Value,
-          AgeRange: getAgeRangeCategory(face.Face.AgeRange),
-          Smile: face.Face.Smile.Value,
-          Emotion: getMostConfidentEmotion(face.Face.Emotions)
+          sex: face.Face.Gender.Value,
+          age: getAgeRangeCategory(face.Face.AgeRange),
+          smile: face.Face.Smile.Value,
+          emotion: getMostConfidentEmotion(face.Face.Emotions)
         });
       }
     } // for
@@ -234,6 +236,9 @@ async function getPersonDetailsFromVideo (videoKey, collectionId, detailedFaces)
     Chalk(INFO('Job Person Search Analysis: Done!'));
     console.timeEnd('Job Person Details Analysis');
     db.updateVideoAnaStatus(videoKey, 1);
+
+    console.log(personsWithDetails);
+    db.addVideoAnaDataToTable(videoKey, personsWithDetails, 'faces');
     // return persons; 
 
   } catch (error) {
@@ -243,6 +248,14 @@ async function getPersonDetailsFromVideo (videoKey, collectionId, detailedFaces)
    
 };
 
+//TODO:
+const getAvgVisitDate = (visits) => {
+  //get filmed_date of current video
+  //get filmed_date of other videos
+  //calculate the date interval between each
+
+  return 1;
+}
 // entry function for call api startFaceSearch
 async function getPersonRecuringAmongVideos (videoKey, collectionId) {
 
@@ -264,10 +277,19 @@ async function getPersonRecuringAmongVideos (videoKey, collectionId) {
     
     let visits = await getFaceSearch(task.JobId, videoKey, 'RECUR_SEARCH'); // this is async 
     addFacesIntoCollection(APP_FACES_BUCKET_NAME, videoKey, APP_REK_DB_COLLECTION_ID)
+    console.log(`debuggggggggggggggggg`, visits);
+
+    let visitDates = visits.map(visit => {
+      return {
+        is_recuring: (visit.HisVisits.length > 0 || false),
+        visit_date: getAvgVisitDate(visit.HisVisits)
+      }
+    });
 
     Chalk(INFO('Job Person Recuring Search: Done!'));
     console.timeEnd('Job Person Recuring Analysis');
     db.updateVideoAnaStatus(videoKey, 1);
+    db.addVideoAnaDataToTable(videoKey, visitDates, 'recurs');
 
     // return persons; 
 

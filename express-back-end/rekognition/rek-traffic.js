@@ -75,10 +75,16 @@ const getPersonsInVideo = (allPersonsData) => {
       person.leave_timestamp = item.Timestamp;
     }
   }
-
+  
   allPersons.push(person); //last person
   console.log(allPersons);
-  return allPersons;
+
+  let personStayDuration = allPersons.map(person => {
+    duration = Math.ceil(((person.leave_timestamp - person.show_timestamp) / 1000)) //seconds; 
+    return { stay_duration: duration };
+  });
+
+  return personStayDuration;
 
 };
 
@@ -127,12 +133,14 @@ async function startTrackingAnalysis (videoKey) {
     console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
     
     let allTrackedPersons = await getPersonsTracking(task.JobId, videoKey);
-    let vidPersonTraffic = getTrackedTraffic(allTrackedPersons);  // prepare for db writing
+    let vidPersonTraffic = await getTrackedTraffic(allTrackedPersons, videoKey);  // prepare for db writing
+    console.log(allTrackedPersons);
     console.log(vidPersonTraffic);
 
     Chalk(INFO('Job Person Tracking Analysis: Done!'));
     db.updateVideoAnaStatus(videoKey, 1);
-
+    db.addVideoAnaDataToTable(videoKey, allTrackedPersons, "persons");
+    db.addVideoAnaDataToTable(videoKey, vidPersonTraffic, "traffic");
     // return allTrackedPersons;
 
   } catch(error) {

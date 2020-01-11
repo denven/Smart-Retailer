@@ -245,7 +245,7 @@ async function queryJobStatusFromSQS(queName, task) {
           } // end of for  
         } else {
           console.log(`Timeout when getting JobStatus msg in ${params.WaitTimeSeconds} seconds from SQS, try another time...\
-          JobName: ${task.JobName}, `);
+          JobName: ${task.JobName}`);
         }
       })
     }

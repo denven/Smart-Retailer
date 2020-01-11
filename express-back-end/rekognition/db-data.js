@@ -2,6 +2,11 @@
  * This module prepare proper data format for recognition data before writing them to database.
  **/
 const _ = require('lodash')
+const moment = require('moment');
+
+const { getVideoDimension } = require('../filemanager/videos');
+const APP_VIDEO_BUCKET_NAME = 'retailer-videos';
+const AWS_DEFAULT_REGION = 'us-west-2';
 
 /**
  * @param {Array} Emotions: Array of 8 types and values of emotions 
@@ -33,6 +38,25 @@ const getAgeRangeCategory = (AgeRange) => {
 
 }
 
+async function getVideoDuration (videoName) {
+  const dimension = await getVideoDimension(videoName);
+  return parseInt(dimension.duration);
+}
+
+const getVideoS3URL = (videoName) => {
+  const s3_url = `https://` + APP_VIDEO_BUCKET_NAME + `.s3-` + AWS_DEFAULT_REGION + `amazonaws.com/` + videoName;
+  return s3_url;
+}
+
+
+const getVideoFilmedDate = (videoName) => {
+
+    let dateTime = videoName.slice(0, -3).replace(/[^0-9]/ig,"").slice(0,14);
+    dateTime = moment( dateTime, 'YYYYMMDDHHmmss', true).format("YYYY-MM-DD[T]HH:mm:ss");
+    console.log(dateTime);
+    console.log(moment(dateTime).unix()); 
+    return (moment(dateTime).utc().format());
+}
 
 // helper for calculating the traffic by time
 const isPersonStillStaying = (timestamp, visit) => {
@@ -47,9 +71,11 @@ const isPersonStillStaying = (timestamp, visit) => {
  * Return an array of objects which have the count of traffic by timestamp
  * @param {Array} TrackedPersons returned by startPersonTracking() in rek-traffic
  */
-const getTrackedTraffic = (TrackedPersons) => {
+async function getTrackedTraffic (TrackedPersons, videoKey) {
 
   let traffic = [];
+
+  let filmed_at = await getVideoDuration(videoKey);
   
   for(const visit of TrackedPersons) {
 
@@ -58,7 +84,7 @@ const getTrackedTraffic = (TrackedPersons) => {
       if(isPersonStillStaying(visit.show_timestamp, person)) count++;
     });
 
-    traffic.push( { timestamp: visit.show_timestamp, count: count } );
+    traffic.push( { timestamp: (filmed_at + visit.show_timestamp / 1000), count: count } );
   }
 
   for(const visit of TrackedPersons) {
@@ -67,7 +93,7 @@ const getTrackedTraffic = (TrackedPersons) => {
       if(isPersonStillStaying(visit.leave_timestamp, person)) count++;
     });
 
-    traffic.push( { timestamp: visit.leave_timestamp, count: count } );
+    traffic.push( { timestamp: (filmed_at + visit.show_timestamp / 1000), count: count } );
   }
 
   let data = _(traffic).orderBy(['timestamp', 'asc']).uniqBy('timestamp').value();
@@ -81,5 +107,8 @@ const getTrackedTraffic = (TrackedPersons) => {
  module.exports = { 
    getMostConfidentEmotion, 
    getAgeRangeCategory,
-   getTrackedTraffic
+   getTrackedTraffic,
+   getVideoDuration,
+   getVideoFilmedDate,
+   getVideoS3URL
   }

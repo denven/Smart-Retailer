@@ -1,6 +1,7 @@
 const config = require('./knexfile');
 const env = process.env.NODE_ENV || 'development';
 const knex = require('knex')(config[env]);
+const _ = require('lodash');
 
 const { getVideoDuration, getVideoFilmedDate, getVideoS3URL } = require('../rekognition/db-data');
 
@@ -63,4 +64,31 @@ const updateVideoAnaStatus = (videoName, status) => {
 
 }
 
-module.exports = { knex, testDBConnection, addOneVideoFile, updateVideoAnaStatus };
+/**
+ * Insert data analyzed from one video
+ * 
+ * @param {String} videoName 
+ * @param {Array} contentsAnalyzed (could be: faces/recurs/persons/traffic)
+ * @param {String} tableName (in database)
+ */
+const addVideoAnaDataToTable = (videoName, contentsAnalyzed, tableName) => {
+
+  console.log(`update table, ${videoName}, ${contentsAnalyzed.length}, ${tableName}`);
+
+  knex('videos').select('id').where('name', videoName)
+    .then( rows => {
+      console.log(`get video_id`, rows[0].id);
+      contentsAnalyzed.forEach(content => {
+        const row = {...content, video_id: rows[0].id};
+        knex(tableName)
+          .insert(row, ['id'])
+          .then(data => console.log(data))
+          .catch(err => console.log(err));
+      });
+    });
+}
+
+
+
+
+module.exports = { knex, testDBConnection, addOneVideoFile, updateVideoAnaStatus, addVideoAnaDataToTable };

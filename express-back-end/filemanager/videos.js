@@ -8,7 +8,7 @@ const shell = require('shelljs');
 
 const s3Client = require('./s3bucket');
 
-const __demoRootDir = path.join(require('os').homedir(), 'lighthouse', 'final', 'Demo');
+const __demoRootDir = path.join(require('os').homedir(), 'lighthouse/final/Demo');
 const APP_FACES_BUCKET_NAME = 'retailer-faces';
 
 //TODO: recieve file from front end and save to video path
@@ -155,4 +155,4 @@ async function cropFacesFromLocalVideo (allFrames, videoFileName) {
  
 }
 
-module.exports = { cropFacesFromLocalVideo };
+module.exports = { getVideoDimension, cropFacesFromLocalVideo };
