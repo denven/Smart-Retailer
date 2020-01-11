@@ -21,7 +21,7 @@ const uploadAction = () =>{
   let videoFiles = document.querySelector('#myFile');  
   let video = videoFiles.files[0];
   formData.append("video", video);
-  
+  console.log(video);
   axios.post(`/api/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -29,8 +29,8 @@ const uploadAction = () =>{
   }).catch((err) => {
     console.log(err , " also the name of the video is " + formData)
   })
-
 }
+
 export default function upload() {
   const classes = useStyles();
   

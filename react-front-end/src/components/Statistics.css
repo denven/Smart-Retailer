@@ -1,13 +1,12 @@
 .pie {
   width: 250 px;
   height: 250 px;
-  border: 2px solid;
 }
 
 .statContainer {
   display: flex;
   flex-direction: column;
-  height: 94vh;
+  height: 87vh;
   width: 83vw;
 }
 .upperRow {
@@ -48,4 +47,7 @@
 .numberStats {
   height: 100%;
   width: 66%;
+}
+.sidebar {
+  width: 50px;
 }

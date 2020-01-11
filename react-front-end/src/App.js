@@ -4,24 +4,18 @@ import './App.css';
 import VerticalTabs from './components/Sidebar';
 import Upload from './components/Upload';
 import Statistics from './components/Statistics';
-import SearchBar from './components/SearchBar';
 
 export default function App (){
   const [state, setState] = useState(0);
-
-  const setView = (view) =>{
+  const setView = (view) => {
     setState(view);
   }
-
   if (state === 0) {
     return (
       <>
         <div className='container'>
           <div className="sideBar">
             <VerticalTabs changeView={setView}/>
-          </div>
-          <div className="searchBar">
-            <SearchBar/>
           </div>
           <div className="statistics">
           </div>
@@ -34,9 +28,6 @@ export default function App (){
         <div className='container'>
           <div className="sideBar">
             <VerticalTabs changeView={setView}/>
-          </div>
-          <div className="searchBar">
-            <SearchBar/>
           </div>
           <div className="statistics">
             <Upload/>
@@ -53,9 +44,6 @@ export default function App (){
           <div className='container'>
             <div className="sideBar">
               <VerticalTabs changeView={setView}/>
-            </div>
-            <div className="searchBar">
-              <SearchBar/>
             </div>
             <div className="statistics">
               <Statistics 

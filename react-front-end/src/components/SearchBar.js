@@ -1,14 +1,16 @@
 import React from 'react';
+import styles from './Statistics.css';
+export default function SearchBar(props) {
 
-export default function SearchBar() {
+  const handleSubmit = event => {
+    event.preventDefault();
+    props.onSearch((document.querySelector("#name").value));
+  }
   return (
     <>
-      <form>
-        <label>
-          Search:
-          <input type="text" name="name" />
-        </label>
-        <input type="submit" value="Submit" />
+      <form onSubmit={handleSubmit}>
+          <input type="text" className={styles.sidebar} id="name" />
+        <input type="submit"/>
       </form>
     </>
   )

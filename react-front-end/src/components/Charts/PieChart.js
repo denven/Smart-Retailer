@@ -36,9 +36,9 @@ export default function MyResponsivePie ({ data = [
         radialLabelsLinkColor={{ from: 'color' }}
         slicesLabelsSkipAngle={10}
         slicesLabelsTextColor="#333333"
-        animate={false}
-        motionStiffness={90}
-        motionDamping={15}
+        animate={true}
+        motionStiffness={0}
+        motionDamping={0}
         defs={[
             {
                 id: 'dots',

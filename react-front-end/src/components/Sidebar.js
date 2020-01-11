@@ -1,8 +1,9 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import { makeStyles } from '@material-ui/core/styles';
 import videosList from '../data/video_data.json';
+import SearchBar from './SearchBar';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -12,7 +13,7 @@ const useStyles = makeStyles(theme => ({
   },
   tabs: {
     borderRight: `2px solid ${theme.palette.divider}`,
-    height: 900
+    height: 890
   },
   logo: {
     fontSize: 25,
@@ -25,12 +26,31 @@ const useStyles = makeStyles(theme => ({
 export default function VerticalTabs(props) {
   const classes = useStyles();
   const videos = videosList.videos;
-  const [value, setValue] = React.useState(0);
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-    props.changeView(newValue);
-  };
+  const [value, setValue] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  // const videosObjectLookup = {}
 
+  // videos.map(video => {
+  //   videosObjectLookup[video] = 0;
+  // });
+
+  // for (let i = 2; i < videos.length; i++) {
+
+  // }
+  // const handleChange = (event, newValue) => {
+  //   setValue(newValue);
+  //   props.changeView(newValue);
+  // };
+
+  // const checkVideoNames = (query) => {
+    
+  //   if (video.name === query){
+  //     setValue()
+  //   }
+  // }
+  // useEffect(() => {
+
+  // }, [searchTerm])
   return (
     <div className={classes.root}>
      
@@ -43,11 +63,11 @@ export default function VerticalTabs(props) {
       >
         <Tab className ={classes.logo} label="Smart-Retailer"/>
         <Tab className = {classes.tab} label="Upload" />
+        <SearchBar onSearch={setSearchTerm}/>
         {videos.map(video => (
         <Tab className = {classes.tab} 
         label={video.name}
         key={video.id} 
-        
         />
         ))}
 
