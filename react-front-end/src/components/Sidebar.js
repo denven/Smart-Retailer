@@ -14,7 +14,7 @@ const useStyles = makeStyles(theme => ({
   },
   tabs: {
     borderRight: `2px solid ${theme.palette.divider}`,
-    height: 890
+    height: 900
   },
   logo: {
     fontSize: 25,

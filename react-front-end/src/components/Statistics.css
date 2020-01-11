@@ -1,20 +1,22 @@
-.pie {
-  width: 250 px;
-  height: 250 px;
-}
 
 .statContainer {
   display: flex;
   flex-direction: column;
-  height: 95vh;
+  height: 99vh;
   width: 83vw;
+  border: solid 2px lightgray;
+  border-radius: 5px;
 }
+
 .upperRow {
   display: flex;
+  flex-direction: row;
   height: 40%;
   width: 100%;
   order: 0;
+  
 }
+
 .bottomRow{
   display: flex;
   height: 64%;
@@ -23,13 +25,20 @@
 .bottomLeft {
   display: flex;
   flex-direction: column;
-  height: 50%;
+  height: 100%;
   width: 33%;
   order: 0;
 }
-
-.bar {
+.bottomLeftSplit {
+  height: 50%;
+  width: 100%;
+}
+.bottomRight {
+  height: 100%;
   width: 66%;
+}
+.bar {
+  width: 50%;
   height: 66%;
   order: 1;
 }
@@ -40,8 +49,8 @@
 }
 
 .video {
-  height: 50%; 
-  width: 50%;
+  height: 100%; 
+  width: 100%;
 }
 
 .numberStats {
@@ -50,4 +59,17 @@
 }
 .sidebar {
   width: 50px;
+}
+
+.singleData {
+  display: flex;
+  flex-direction: row;
+  width: 66%;
+  height: 100%;
+}
+.singles {
+  width: 30%;
+  height: 100%;
+  padding: 25px 0px 0px 0px;
+  margin: 5px;
 }
