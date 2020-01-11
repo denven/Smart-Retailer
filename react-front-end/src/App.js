@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import './App.css';
 import VerticalTabs from './components/Sidebar';
 import Upload from './components/Upload';
 import Statistics from './components/Statistics';
-
+import axios from 'axios';
 export default function App (){
   const [state, setState] = useState(0);
   const setView = (view) => {
     setState(view);
   }
+  let videoList;
+
+  axios.get(`/videos`)
+  .then(res => {
+    videoList = res
+  });
+  
   if (state === 0) {
     return (
       <>
@@ -36,26 +42,22 @@ export default function App (){
       </>
     )
   } else {
-    //axios get stats from backend api
-    // axios.get(`api/stats/${state}`)
-    // .then((statistics => {
       return (
         <>
           <div className='container'>
             <div className="sideBar">
-              <VerticalTabs changeView={setView}/>
+              <VerticalTabs 
+                changeView={setView}
+                videoList={videoList}
+              />
             </div>
             <div className="statistics">
               <Statistics 
-              // stats={statistics}
+                listNumber={state}
               />
             </div>
           </div>
         </>
       );
-    // }))
-    // .catch((error) => {
-    //   console.log(error);
-    // })
   }
 }

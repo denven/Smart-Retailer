@@ -22,7 +22,7 @@ const uploadAction = () =>{
   let video = videoFiles.files[0];
   formData.append("video", video);
   console.log(video);
-  axios.post(`/api/`, formData, {
+  axios.post(`/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
