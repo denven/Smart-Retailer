@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TEST Upload</title>
+</head>
+<body>
+
+<div style="flex-direction: row; height: 50px;">
+    <!--  SINGLE FILE -->
+    <form action="/upload" enctype="multipart/form-data" method="POST">
+        <input type="file" name="VID" />
+        <input type="submit" value="Upload a file"/>
+    </form>
+</div>
+
+<div style="flex-direction: row; height: 50px;">
+    <!-- MULTIPLE FILES -->
+    <form action="/uploads"  enctype="multipart/form-data" method="POST">
+        <input type="file" name="myFiles" multiple>
+        <input type="submit" value="Upload multiple files"/>
+    </form>
+
+</div>
+
+<div style="flex-direction: row; height: 50px;">
+    <!-- PHOTO -->   
+    <form action="/upload/photo" enctype="multipart/form-data" method="POST">
+        <input type="file" name="myImage" accept="image/*" />
+        <input type="submit" value="Upload Photo"/>
+    </form>    
+</div>
+
+
+</body>
+</html>
