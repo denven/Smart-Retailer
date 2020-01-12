@@ -239,8 +239,6 @@ async function getPersonDetailsFromVideo (videoKey, collectionId, detailedFaces)
     Chalk(INFO('Job Person Search Analysis: Done!'));
     console.timeEnd('Job Person Details Analysis');
     db.updateVideoAnaStatus(videoKey, 1);
-
-    console.log(`Faces with Details:`, personsWithDetails);
     db.addVideoAnaDataToTable(videoKey, personsWithDetails, 'faces');
     // return persons; 
 
