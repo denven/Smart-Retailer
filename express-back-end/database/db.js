@@ -34,8 +34,8 @@ async function addOneVideoFile (videoName)  {
     ana_status: 0  //0: not analyzed; 1-2-3: in-process; 4: done, -1: failed
   };
   
-  console.log('Write videos table', videoRcord)
-  knex('videos').insert(videoRcord, ['id']).then(data => console.log(data)).catch(err => console.log(err));
+  console.log('File Received, Write a record to videos table')
+  knex('videos').insert(videoRcord, ['id']).catch(err => console.log(err));
 }
 
 /**
@@ -54,7 +54,7 @@ const updateVideoAnaStatus = (videoName, status) => {
     .then( s => {
       if(s !== -1) {
         knex('videos').where('name', videoName).increment('ana_status', 1)
-        .then(s => console.log(`ana_statis, ${s}`))
+        .then(s => console.log(`Update Analysis Process: ${s}`))
         .catch(err => console.log(err));
       }
     });
@@ -77,12 +77,11 @@ const addVideoAnaDataToTable = (videoName, contentsAnalyzed, tableName) => {
 
   knex('videos').select('id').where('name', videoName)
     .then( rows => {
-      console.log(`get video_id`, rows[0].id);
       contentsAnalyzed.forEach(content => {
         const row = {...content, video_id: rows[0].id};
         knex(tableName)
           .insert(row, ['id'])
-          .then(data => console.log(data))
+          // .then(data => console.log(data))
           .catch(err => console.log(err));
       });
     });

@@ -58,7 +58,6 @@ const getVideoFilmedDate = (videoName) => {
 
 // helper for calculating the traffic by time
 const isPersonStillStaying = (timestamp, visit) => {
-  console.log(timestamp, visit.show_timestamp, visit.leave_timestamp);
   if(timestamp >= visit.show_timestamp && timestamp <= visit.leave_timestamp) {
     return true;
   } else {
@@ -91,7 +90,7 @@ async function getTrackedTraffic (TrackedPersons, videoKey) {
     TrackedPersons.forEach( person => {
       if(isPersonStillStaying(visit.leave_timestamp, person)) {
         count++;
-        traffic.push( { timestamp: Math.floor(visit.show_timestamp / 1000), count: count } );
+        traffic.push( { timestamp: Math.floor(visit.leave_timestamp / 1000), count: count } );
       }
     });
   }

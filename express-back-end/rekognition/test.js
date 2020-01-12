@@ -19,3 +19,12 @@ const getVideoFilmedDate = (videoName) => {
 }
 
 getVideoFilmedDate('sfdsd2014kllk1202[][]101203.mp4');
+
+let date1 = moment(`20200101`);
+let date2 = moment(`20200110`);
+console.log('test', 'VID_20200106_185815'.slice(4, 12))
+
+let curVisitDate = moment('VID_20200106_185815'.slice(4, 12));
+let firstHisVisitDate = moment('VID_20200110_185815'.slice(4, 12));
+
+console.log(curVisitDate.diff(firstHisVisitDate, 'days'));

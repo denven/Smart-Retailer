@@ -7,6 +7,7 @@
  **/
 
 const _ = require('lodash');
+const inspect = require('util').inspect;
 
 const chalk = require('chalk');
 const INFO = chalk.bold.green;
@@ -169,7 +170,7 @@ async function getFaceSearch (jobId, videoKey, type) {
   } else {
 
     let personVisits = _.filter(allPersons, (person) => {return person.HisVisits.length > 0} );
-    console.log(`recursssssssssssssssssssss`, personVisits);
+    console.log(`Recuring Seraching results:`, inspect(personVisits, false, null, true));
     Chalk(INFO(`Recognized ${personVisits.length} recurring from ${allPersons.length} persons in video ${videoKey}`));
    
   }
@@ -214,7 +215,7 @@ const getPersonsWithDetails = (persons, faceDetails) => {
 
   });
 
-  console.log(`Unique Persons With Detailed Face Data:`, detailedPersons);
+  console.log(`Unique Persons With Detailed Face Data:`, inspect(detailedPersons, false, null, true));
   return detailedPersons;
 }
 
@@ -239,7 +240,7 @@ async function getPersonDetailsFromVideo (videoKey, collectionId, detailedFaces)
     console.timeEnd('Job Person Details Analysis');
     db.updateVideoAnaStatus(videoKey, 1);
 
-    console.log(personsWithDetails);
+    console.log(`Faces with Details:`, personsWithDetails);
     db.addVideoAnaDataToTable(videoKey, personsWithDetails, 'faces');
     // return persons; 
 

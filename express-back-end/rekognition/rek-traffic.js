@@ -3,7 +3,7 @@
  * no faces collection needed when processing
  * test data: 16s duration video analysis needs 120s, 23s video needs 180s
  **/
-
+const inspect = require('util').inspect;
 const chalk = require('chalk');
 const INFO = chalk.bold.green;
 const ERROR = chalk.bold.red;
@@ -133,8 +133,8 @@ async function startTrackingAnalysis (videoKey) {
         });
 
     let videoTraffic = await getTrackedTraffic(allTrackedPersons, videoKey);  // prepare for db writing
-    console.log(personStayDuration);
-    console.log(videoTraffic);
+    console.log(`Perons Found:`, inspect(personStayDuration, false, null, true));
+    console.log(`Traffic Data:`, inspect(videoTraffic, false, null, true));
 
     Chalk(INFO('Job Person Tracking Analysis: Done!'));
     db.updateVideoAnaStatus(videoKey, 1);
