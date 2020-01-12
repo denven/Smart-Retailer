@@ -1,5 +1,5 @@
 import React, {useEffect}from 'react';
-import styles from './Statistics.css';
+import './Statistics.css';
 import  BarChart  from './Charts/BarChart';
 import PieChart from './Charts/PieChart';
 import VideoPlayer from './Charts/VideoPlayer';
@@ -42,10 +42,10 @@ export default function Statstics (props) {
         </div>
         <div className="singleData">
           <div className="pie">
-            <PieChart stat={props.stat}/>
+            <PieChart ages={1}/>
           </div>
           <div className="pie">
-            <PieChart stat={props.stat}/>
+            <PieChart emotions={1}/>
           </div>
         </div>
       </div>

@@ -81,3 +81,9 @@
   vertical-align: center;
   background-color: #F3FAF1;
 }
+
+.MuiFormGroup-root {
+  position: absolute;
+  top: 350px;
+  right: 0px;
+}
