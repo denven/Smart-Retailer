@@ -61,7 +61,7 @@ module.exports = function() {
 
   // query recurs table with video_id
   router.get('/recurs/:vid', (req, res) => {
-
+    console.log(`Get Recurs Reqeuest, ${req.params.vid}`);
     knex('recurs')
         .select('*')
         .where('video_id', req.params.vid)
@@ -76,6 +76,7 @@ module.exports = function() {
   // query traffic and persons table with video_id
   router.get('/track/:vid', (req, res) => {
 
+    console.log(`Get Perons and Traffic Reqeuest, ${req.params.vid}`);
     let track = {};
     knex('persons').select('*').where('video_id', req.params.vid)
       .then( persons => {
@@ -94,7 +95,8 @@ module.exports = function() {
   
   // query faces table with video_id
   router.get('/faces/:vid', (req, res) => {
-
+    
+    console.log(`Get Faces Reqeuest, ${req.params.vid}`);
     knex('faces')
       .select('*')
       .where('video_id', req.params.vid)
