@@ -79,13 +79,7 @@ const getPersonsInVideo = (allPersonsData) => {
   allPersons.push(person); //last person
   console.log(allPersons);
 
-  let personStayDuration = allPersons.map(person => {
-    duration = Math.ceil(((person.leave_timestamp - person.show_timestamp) / 1000)) //seconds; 
-    return { stay_duration: duration };
-  });
-
-  return personStayDuration;
-
+  return allPersons;
 };
 
 
@@ -133,14 +127,19 @@ async function startTrackingAnalysis (videoKey) {
     console.log(`Job ${status ? 'SUCCEEDED' : 'NOT_DONE'} from SQS query: ${status}`);
     
     let allTrackedPersons = await getPersonsTracking(task.JobId, videoKey);
-    let vidPersonTraffic = await getTrackedTraffic(allTrackedPersons, videoKey);  // prepare for db writing
-    console.log(allTrackedPersons);
-    console.log(vidPersonTraffic);
+    let personStayDuration = allTrackedPersons.map(person => {
+          duration = Math.ceil(((person.leave_timestamp - person.show_timestamp) / 1000)) //seconds; 
+          return { stay_duration: duration };
+        });
+
+    let videoTraffic = await getTrackedTraffic(allTrackedPersons, videoKey);  // prepare for db writing
+    console.log(personStayDuration);
+    console.log(videoTraffic);
 
     Chalk(INFO('Job Person Tracking Analysis: Done!'));
     db.updateVideoAnaStatus(videoKey, 1);
-    db.addVideoAnaDataToTable(videoKey, allTrackedPersons, "persons");
-    db.addVideoAnaDataToTable(videoKey, vidPersonTraffic, "traffic");
+    db.addVideoAnaDataToTable(videoKey, personStayDuration, "persons");  // persons table
+    db.addVideoAnaDataToTable(videoKey, videoTraffic, "traffic");
     // return allTrackedPersons;
 
   } catch(error) {

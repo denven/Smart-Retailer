@@ -40,7 +40,7 @@ const getAgeRangeCategory = (AgeRange) => {
 
 async function getVideoDuration (videoName) {
   const dimension = await getVideoDimension(videoName);
-  return parseInt(dimension.duration);
+  return Math.ceil(dimension.duration);
 }
 
 const getVideoS3URL = (videoName) => {
@@ -53,13 +53,12 @@ const getVideoFilmedDate = (videoName) => {
 
     let dateTime = videoName.slice(0, -3).replace(/[^0-9]/ig,"").slice(0,14);
     dateTime = moment( dateTime, 'YYYYMMDDHHmmss', true).format("YYYY-MM-DD[T]HH:mm:ss");
-    console.log(dateTime);
-    console.log(moment(dateTime).unix()); 
     return (moment(dateTime).utc().format());
 }
 
 // helper for calculating the traffic by time
 const isPersonStillStaying = (timestamp, visit) => {
+  console.log(timestamp, visit.show_timestamp, visit.leave_timestamp);
   if(timestamp >= visit.show_timestamp && timestamp <= visit.leave_timestamp) {
     return true;
   } else {
@@ -75,25 +74,26 @@ async function getTrackedTraffic (TrackedPersons, videoKey) {
 
   let traffic = [];
 
-  let filmed_at = await getVideoDuration(videoKey);
-  
-  for(const visit of TrackedPersons) {
+  let filmed_at = await getVideoFilmedDate(videoKey);
 
+  for(const visit of TrackedPersons) {
     let count = 0;
     TrackedPersons.forEach( person => {
-      if(isPersonStillStaying(visit.show_timestamp, person)) count++;
+      if(isPersonStillStaying(visit.show_timestamp, person)) {
+        count++;
+        traffic.push( { timestamp: Math.floor(visit.show_timestamp / 1000), count: count } );
+      }
     });
-
-    traffic.push( { timestamp: (filmed_at + visit.show_timestamp / 1000), count: count } );
   }
 
   for(const visit of TrackedPersons) {
     let count = 0;
     TrackedPersons.forEach( person => {
-      if(isPersonStillStaying(visit.leave_timestamp, person)) count++;
+      if(isPersonStillStaying(visit.leave_timestamp, person)) {
+        count++;
+        traffic.push( { timestamp: Math.floor(visit.show_timestamp / 1000), count: count } );
+      }
     });
-
-    traffic.push( { timestamp: (filmed_at + visit.show_timestamp / 1000), count: count } );
   }
 
   let data = _(traffic).orderBy(['timestamp', 'asc']).uniqBy('timestamp').value();
@@ -101,8 +101,22 @@ async function getTrackedTraffic (TrackedPersons, videoKey) {
   return data;
 }
 
-// average stay time
-// average visit period
+
+const getAvgRecuringDate = (recurs, videoKey) => {
+
+  let videoVisits = recurs.map(person => {
+    if(person.HisVisits.length === 0) {
+      return {is_recuring: false, visit_date: 0}
+    } else {
+        let curVisitDate = moment(videoKey.slice(4, 12));
+        let firstHisVisitDate = moment(person.HisVisits[0].Vid.slice(4, 12));      
+        let avgDaysPerVisit = curVisitDate.diff(firstHisVisitDate, 'days') / person.HisVisits.length;
+        return { is_recuring: true, visit_date: avgDaysPerVisit };
+    }
+  });
+
+  return videoVisits;
+}
 
  module.exports = { 
    getMostConfidentEmotion, 
@@ -110,5 +124,6 @@ async function getTrackedTraffic (TrackedPersons, videoKey) {
    getTrackedTraffic,
    getVideoDuration,
    getVideoFilmedDate,
-   getVideoS3URL
+   getVideoS3URL,
+   getAvgRecuringDate
   }
