@@ -2,9 +2,9 @@ import React, {useState} from 'react';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import { makeStyles } from '@material-ui/core/styles';
-import videosList from '../data/video_data.json';
 import SearchBar from './SearchBar';
 import axios from 'axios';
+import videosList from '../data/video_data.json';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -28,7 +28,8 @@ export default function VerticalTabs(props) {
   const classes = useStyles();
   const [value, setValue] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  let videos = videosList.videos;
+  let videos=videosList.videos;
+  console.log(videos);
   // const videosObjectLookup = {}
 
   // videos.map(video => {
@@ -38,10 +39,7 @@ export default function VerticalTabs(props) {
   // for (let i = 2; i < videos.length; i++) {
 
   // }
-  // axios.get("/videos/")
-  // .then(res => {
-  //   videos = res;
-  // })
+  
   const handleChange = (event, newValue) => {
     setValue(newValue);
     props.changeView(newValue);
@@ -58,7 +56,6 @@ export default function VerticalTabs(props) {
   // }, [searchTerm])
   return (
     <div className={classes.root}>
-     
         <Tabs
         orientation="vertical"
         variant="scrollable"
@@ -68,7 +65,10 @@ export default function VerticalTabs(props) {
       >
         <Tab className ={classes.logo} label="Smart-Retailer"/>
         <Tab className = {classes.tab} label="Upload" />
-        <SearchBar onSearch={setSearchTerm}/>
+        <SearchBar 
+        onSearch={setSearchTerm}
+        key={2}
+        />
         {videos.map(video => (
         <Tab className = {classes.tab} 
         label={video.name}

@@ -289,7 +289,7 @@ export default function MyResponsiveLine ({ data =
             tickSize: 5,
             tickPadding: 5,
             tickRotation: 0,
-            legend: 'Duration',
+            legend: `Duration \b Filmed at 11:30 \b`,
             legendOffset: 36,
             legendPosition: 'middle'
         }}

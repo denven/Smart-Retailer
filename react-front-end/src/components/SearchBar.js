@@ -45,8 +45,9 @@ export default function SearchBar(props) {
 
   const handleSubmit = event => {
     event.preventDefault();
-    props.onSearch((document.querySelector("#name").value));
+    // props.onSearch((document.querySelector("#name").value));
   }
+  
   return (
     <>
       <div className={classes.search}>
