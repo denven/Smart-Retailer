@@ -9,6 +9,8 @@ const uploadAction = () =>{
   let video = videoFiles.files[0];
   formData.append("video", video);
   console.log(video);
+
+
   axios.post(`/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -37,13 +39,16 @@ const uploadAction = () =>{
 // }
 export default function MyUploader (){
   // specify upload params and url for your files
-  const getUploadParams = ({ meta }) => { return { url: '/uploads' } }
+  const getUploadParams = ({ meta }) => { return { url: '/upload' } }
   
   // called every time a file's `status` changes
   const handleChangeStatus = ({ meta, file }, status) => { console.log(status, meta, file) }
   
   // receives array of files that are done uploading when submit button is clicked
-  const handleSubmit = (files) => { console.log(files.map(f => f.meta)) }
+  const handleSubmit = (files) => { 
+    console.log(files, " this is files");
+    console.log(files.map(f => f.meta));
+   }
  
   return (
     <Dropzone

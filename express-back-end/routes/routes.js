@@ -60,7 +60,7 @@ module.exports = function() {
   });
 
   // query recurs table with video_id
-  router.get('/recurs/:vid', (req, res) => {
+  router.get('/recurs/', (req, res) => {
     console.log(`Get Recurs Reqeuest, ${req.params.vid}`);
     knex('recurs')
         .select('*')

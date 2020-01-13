@@ -1,7 +1,18 @@
-import React from 'react';
-import styles from '../Statistics.css';
+import React, { useEffect }from 'react';
+import '../Statistics.css';
+import axios from 'axios';
 
-export default function VideoPlayer () {
+export default function VideoPlayer (props) {
+  let videos;
+
+  useEffect(() => {
+    axios.get(`/videos`)
+    .then(res => {
+      videos = res.data
+      console.log(videos, " videos");
+    });
+  })
+
   return(
     <>
       <video width='400' className="video" controls>
