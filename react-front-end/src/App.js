@@ -34,42 +34,10 @@ export default function App (){
     .then(res => {
       setFaces(res.data);
     });
-  },[])
+  },[state])
 
+  // return <p>{JSON.stringify(recur)}</p>;
 
-  // let recurs = 10;
-  // let tracking = 68;
-  // let faces = 100;
-  // let revisitTime = 5;
-  // let videos;
-  
-  // useEffect(()=> {
-  //   axios.get(`/videos`)
-  //   .then(res => {
-  //     videos = res.data
-  //     console.log(videos, " videos");
-  //   });
-  //   axios.get(`/recurs/${props.listNumber}`)
-  //   .then(res => {
-  //     recurs = res.data;
-  //     console.log(recurs, " recurs");
-  //   });
-  //   axios.get(`/track/${props.listNumber}`)
-  //   .then(res => {
-  //     tracking = res.data;
-  //     console.log(tracking, " tracking");
-  //   });
-  //   axios.get(`/faces/${props.listNumber}`)
-  //   .then(res => {
-  //     faces = res.data;
-  //     console.log(faces, " faces")
-  //   });
-  // },[])
-
-
-
-
-  return <p>{JSON.stringify(recur)}</p>;
   if (state === 0) {
     return (
       <>
@@ -115,6 +83,9 @@ export default function App (){
               <Statistics 
                 listNumber={state - 2}
                 videoList={videoList}
+                recur={recur}
+                tracking={tracking}
+                faces={faces}
               />
             </div>
           </div>

@@ -15,6 +15,7 @@ export default function Statstics (props) {
       }
     });
   }
+  
   return(
     <div className="statContainer">
       <div className="upperRow">
@@ -41,19 +42,19 @@ export default function Statstics (props) {
           <div className="singles">
           <SingleDataPoint 
           listNumber={props.listNumber}
-          recur={1}
+          recur={props.recur}
           />
           </div>
           <div className="singles">
           <SingleDataPoint 
           listNumber={props.listNumber}
-          stayTime={1}
+          stayTime={props.tracking}
           />
           </div>
           <div className="singles">
           <SingleDataPoint 
           listNumber={props.listNumber}
-          returnTime={1}
+          returnTime={props.recur}
           />
           </div>
         </div>
