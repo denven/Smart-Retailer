@@ -3,53 +3,54 @@ import { ResponsivePie } from '@nivo/pie'
 
 export default function MyResponsivePie (props) {
   if (props.emotions) {
+
     let data = [
       {
         "id": "Disgusted",
         "label": "Disgusted",
-        "value": 27,
+        "value": props.emotions.DISGUSTED,
         "color": "hsl(57, 70%, 50%)"
       },
       {
         "id": "Happy",
         "label": "Happy",
-        "value": 60,
+        "value": props.emotions.HAPPY,
         "color": "hsl(162, 70%, 50%)"
       },
       {
         "id": "Calm",
         "label": "Calm",
-        "value": 45,
+        "value": props.emotions.CALM,
         "color": "hsl(92, 50%, 70%)"
       },
       {
         "id": "Anger",
         "label": "Anger",
-        "value": 34,
+        "value": props.emotions.ANGER,
         "color": "hsl(62, 50%, 70%)"
       },
       {
         "id": "confused",
         "label": "confused",
-        "value": 23,
+        "value": props.emotions.CONFUSED,
         "color": "hsl(157, 60%, 20%)"
       },
       {
         "id": "sad",
         "label": "sad",
-        "value": 25,
+        "value": props.emotions.SAD,
         "color": "hsl(122, 30%, 70%)"
       },
       {
         "id": "fear",
         "label": "fear",
-        "value": 32,
+        "value": props.emotions.FEAR,
         "color": "hsl(71, 50%, 50%)"
       },
       {
         "id": "Surprised",
         "label": "Surprised",
-        "value": 164,
+        "value": props.emotions.SURPRISED,
         "color": "hsl(122, 10%, 90%)"
       }
     ]
@@ -68,7 +69,7 @@ export default function MyResponsivePie (props) {
           radialLabelsTextColor="#333333"
           radialLabelsLinkOffset={0}
           radialLabelsLinkDiagonalLength={10}
-          radialLabelsLinkHorizontalLength={15}
+          radialLabelsLinkHorizontalLength={10}
           radialLabelsLinkStrokeWidth={1}
           radialLabelsLinkColor={{ from: 'color' }}
           slicesLabelsSkipAngle={10}
@@ -115,48 +116,37 @@ export default function MyResponsivePie (props) {
   } else {
     let data = [
       {
-        "id": "0-12",
-        "label": "0-12",
-        "value": 45,
+        "id": "Pre-Teen",
+        "label": "9-12",
+        "value": props.ages["Pre-Teen"],
         "color": "hsl(57, 70%, 50%)"
       },
       {
-        "id": "13-17",
-        "label": "13-17",
-        "value": 87,
+        "id": "Teen",
+        "label": "13-19",
+        "value": props.ages["Teen"],
         "color": "hsl(162, 70%, 50%)"
       },
       {
-        "id": "18-20",
-        "label": "18-20",
-        "value": 349,
+        "id": "Young Adult",
+        "label": "20-35",
+        "value": props.ages["Young Adult"],
         "color": "hsl(92, 50%, 70%)"
       },
       {
-        "id": "21-25",
-        "label": "21-25",
-        "value": 102,
+        "id": "Middle Aged",
+        "label": "36-55",
+        "value": props.ages["Middle Aged"],
         "color": "hsl(62, 50%, 70%)"
       },
       {
-        "id": "26-35",
-        "label": "26-35",
-        "value": 54,
+        "id": "Senior",
+        "label": "55+",
+        "value": props.ages["55+"],
         "color": "hsl(157, 60%, 20%)"
-      },
-      {
-        "id": "36-45",
-        "label": "36-45",
-        "value": 82,
-        "color": "hsl(122, 30%, 70%)"
-      },
-      {
-        "id": "46+",
-        "label": "46+",
-        "value": 47,
-        "color": "hsl(71, 50%, 50%)"
       }
     ]
+    
     
     return(
       <ResponsivePie
@@ -166,14 +156,14 @@ export default function MyResponsivePie (props) {
           padAngle={0}
           cornerRadius={0}
           colors={{ scheme: 'nivo' }}
-          borderWidth={3}
+          borderWidth={0}
           borderColor={{ from: 'color', modifiers: [ [ 'darker', 0.2 ] ] }}
           radialLabelsSkipAngle={10}
           radialLabelsTextXOffset={6}
           radialLabelsTextColor="#333333"
           radialLabelsLinkOffset={0}
-          radialLabelsLinkDiagonalLength={10}
-          radialLabelsLinkHorizontalLength={15}
+          radialLabelsLinkDiagonalLength={5}
+          radialLabelsLinkHorizontalLength={2}
           radialLabelsLinkStrokeWidth={1}
           radialLabelsLinkColor={{ from: 'color' }}
           slicesLabelsSkipAngle={10}

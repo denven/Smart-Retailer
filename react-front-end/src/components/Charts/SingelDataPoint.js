@@ -2,7 +2,10 @@ import React, { useEffect } from 'react';
 import axios from 'axios';
 
 export default function SingleDataPoint(props){
+  console.log(props);
 
+
+  
   if (props.recur) {
     let numOfRecur = 0;
     let totalNum = 0;

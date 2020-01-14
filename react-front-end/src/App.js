@@ -25,7 +25,7 @@ export default function App (){
     axios.get(`/recurs/${state - 2}`)
     .then(res => {
       setRecur(res.data);
-    });
+    }).catch(err => console.log(err));
     axios.get(`/track/${state - 2}`)
     .then(res => {
       setTracking(res.data);
