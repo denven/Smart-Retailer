@@ -8,10 +8,10 @@ import LineAndBarGraph from './Charts/LineAndBarGraph';
 import TransferList from './TransferList';
 
 export default function Statstics (props) {
-
   const [selected, setSelected] = React.useState("all");
   const [deselected, setDeselected] = React.useState();
   
+
   let graph = {
     duration: 0,
     timestamp: [],

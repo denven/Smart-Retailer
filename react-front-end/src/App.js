@@ -5,8 +5,16 @@ import Upload from './components/Upload';
 import Statistics from './components/Statistics';
 import axios from 'axios';
 
+
+
 export default function App (){
- 
+  const [state, setState] = useState(0);
+  const [videoList, setVideoList] = useState([]);
+  const [recur, setRecur] = useState([]);
+  const [tracking, setTracking] = useState([]);
+  const [faces, setFaces] = useState([]);
+  const [all, setAll] = React.useState();
+
   const [ listening, setListening ] = useState(false);
 
   useEffect( () => {
@@ -21,11 +29,6 @@ export default function App (){
     }
   }, [listening]);
 
-  const [state, setState] = useState(0);
-  const [videoList, setVideoList] = useState([]);
-  const [recur, setRecur] = useState([]);
-  const [tracking, setTracking] = useState([]);
-  const [faces, setFaces] = useState([]);
   const setView = (view) => {
     setState(view);
   }
@@ -33,9 +36,27 @@ export default function App (){
   useEffect(() => {
     axios.get(`/videos`)
     .then(res => {
-      setVideoList(res.data);
+      setVideoList(res.data.reverse());
+    })
+    axios.get(`/recurs/${state - 2}`)
+    .then(res => {
+      setRecur(res.data);
+    }).catch(err => console.log(err));
+    axios.get(`/track/${state - 2}`)
+    .then(res => {
+      setTracking(res.data);
     });
-  },[state])
+    axios.get(`/faces/${state - 2}`)
+    .then(res => {
+      setFaces(res.data);
+    });
+  },[state]);
+  useEffect(() => {
+    axios.get('/all/')
+    .then(res => {
+      setAll(res);
+    })
+  }, []);
 
   // return <p>{JSON.stringify(recur)}</p>;
 
@@ -104,11 +125,8 @@ export default function App (){
             </div>
             <div className="statistics">
               <Statistics 
-                listNumber={-1}
-                videoList={videoList}
-                recur={recur}
-                tracking={tracking}
-                faces={faces}
+                all={all}
+                setAll={setAll}
               />
             </div>
           </div>
