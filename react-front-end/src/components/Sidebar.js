@@ -3,7 +3,9 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import { makeStyles } from '@material-ui/core/styles';
 import SearchBar from './SearchBar';
-import axios from 'axios';
+import Fab from '@material-ui/core/Fab';
+import './Statistics.css';
+
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -34,7 +36,10 @@ export default function VerticalTabs(props) {
     setValue(newValue);
     props.changeView(newValue);
   };
-
+  function setViewToAll() {
+    props.changeView("all");
+    setValue(-1);
+  }
   const parsingFileName = (fileName) => {
     let name = fileName.slice(4,12);
     let year = name.slice(0,4);
@@ -93,7 +98,7 @@ export default function VerticalTabs(props) {
         className={classes.tabs}
       >
         <Tab className ={classes.logo} label="Smart-Retailer"/>
-        <Tab className = {classes.tab} label="Upload" disabled />
+        <Tab className = {classes.tab} label="Upload" />
         <SearchBar 
         onSearch={setSearchTerm}
         key={2}
@@ -104,8 +109,12 @@ export default function VerticalTabs(props) {
         key={video.id} 
         />
         ))}
-
       </Tabs>
+      <div className="all">
+        <Fab variant="extended" className="all" onClick={setViewToAll}>
+          All Statistics
+        </Fab>
+      </div>
     </div>
   );
 }

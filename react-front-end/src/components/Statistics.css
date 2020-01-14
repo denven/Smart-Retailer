@@ -87,3 +87,9 @@
   top: 350px;
   right: 0px;
 }
+
+.all {
+  position: absolute;
+  top: 410px;
+  right: 20px;
+}
