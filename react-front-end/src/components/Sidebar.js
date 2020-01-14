@@ -93,7 +93,7 @@ export default function VerticalTabs(props) {
         className={classes.tabs}
       >
         <Tab className ={classes.logo} label="Smart-Retailer"/>
-        <Tab className = {classes.tab} label="Upload" />
+        <Tab className = {classes.tab} label="Upload" disabled />
         <SearchBar 
         onSearch={setSearchTerm}
         key={2}
