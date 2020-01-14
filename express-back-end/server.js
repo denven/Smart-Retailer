@@ -24,6 +24,7 @@ awsServiceStart();
 anaTaskManager();
 
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
+  server.keepAliveTimeout = 0;
   console.log(`Express seems to be listening on port ${PORT} so that's pretty good 👍`);
 });
