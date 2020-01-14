@@ -1,19 +1,34 @@
-import React from 'react';
-
+import React, { useEffect } from 'react';
+import axios from 'axios';
 
 export default function SingleDataPoint(props){
+  console.log(props);
+
+
+  
   if (props.recur) {
+    let numOfRecur = 0;
+    let totalNum = 0;
+    props.recur.forEach(person => {
+      if (person.is_recuring === true){
+        numOfRecur++;
+      }
+      totalNum++;
+    })
     return(
       <>
         <div>
             <div className="upperText">
               <p>
-                Recurring customers
+                Recurring customers vs Total Customers
               </p>
             </div>
           <div className="dataDisplay">
             <p>
-              {props.recur}
+              {numOfRecur}
+            </p>
+            <p>
+              {totalNum}
             </p>
           </div>
         </div>
@@ -21,17 +36,24 @@ export default function SingleDataPoint(props){
     );
   }
   if (props.stayTime) {
+    let totalTime = 0;
+    let averageTime = 0;
+
+    props.stayTime.persons.forEach(person => {
+      totalTime += person.stay_duration;
+    });
+    averageTime = totalTime / props.stayTime.persons.length;
     return(
       <>
         <div>
             <div className="upperText">
               <p>
-                Average Stay Time
+                Average Time in Store
               </p>
             </div>
           <div className="dataDisplay">
             <p>
-              {props.stayTime + " seconds"}
+              {averageTime.toFixed(2) + " seconds"}
             </p>
           </div>
         </div>
@@ -40,17 +62,28 @@ export default function SingleDataPoint(props){
   }
 
   if (props.returnTime) {
+    let totalReturnTime = 0;
+    let count = 0;
+    let averageReturnTime = 0;
+    props.returnTime.forEach(person => {
+      totalReturnTime += person.visit_date;
+      if (person.is_recuring) {
+        count++;
+      }
+    });
+    averageReturnTime = totalReturnTime / count;
+
     return(
       <>
         <div>
             <div className="upperText">
               <p>
-                Average Time Recurring Customers take to return.
+                Average Days Recurring Customers take to return.
               </p>
             </div>
           <div className="dataDisplay">
             <p>
-              {props.returnTime + " days"}
+              {averageReturnTime + " days"}
             </p>
           </div>
         </div>

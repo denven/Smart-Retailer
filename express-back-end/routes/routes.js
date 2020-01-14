@@ -87,7 +87,9 @@ module.exports = function() {
         .catch(err => {
           console.log(err);
         });
-  });  
+  });
+
+ 
 
   // query traffic and persons table with video_id
   router.get('/track/:vid', (req, res) => {

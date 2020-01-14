@@ -1,11 +1,14 @@
-import React from 'react';
-import styles from '../Statistics.css';
+import React, { useEffect }from 'react';
+import '../Statistics.css';
+import axios from 'axios';
 
-export default function VideoPlayer () {
+export default function VideoPlayer (props) {
+  let video=props.url;
+  console.log(video, " this is in videos");
   return(
     <>
       <video width='400' className="video" controls>
-        <source src="https://retailer-videos.s3-us-west-2.amazonaws.com/sample-0.mp4" type="video/mp4"/>
+        <source src={video} type="video/mp4"/>
       </video>
     </>
   );

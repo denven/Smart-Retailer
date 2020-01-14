@@ -11,7 +11,9 @@ export default function LineAndBarGraph (props) {
   if (graphToggle === "line") {
     return (
       <>
-        <LineChart/>
+        <LineChart
+        graph={props.graph}
+        />
         <GraphToggle 
           className="floater"
           setGraph={setGraphToggle}
@@ -21,7 +23,9 @@ export default function LineAndBarGraph (props) {
   } else {
     return (
       <>
-        <BarChart/>
+        <BarChart
+          graph={props.graph}
+        />
         <GraphToggle 
           className="floater"
           setGraph={setGraphToggle}
