@@ -20,11 +20,12 @@ async function chkUnAnaVideos () {
 
 async function getVideoTaskStat (vidName) {
 
-  let status = await knex('videos').select('ana_status').where('name', vidName);
-
-    // .then( rows => unAnaVideos = rows ) 
-    // .catch( err => console.log(err) );
-  return status;
+  if(vidName) {
+    let data = await knex('videos').select('ana_status').where('name', vidName);
+    return data[0].ana_status;
+  } else {
+    return 0;
+  }
 }
 
 
@@ -54,19 +55,27 @@ async function anaTaskManager () {
         startVideoRekognition(unAnaVideos[0].name);
         taskContext.status = 'IN_PROCESS';
         taskContext.name = unAnaVideos[0].name;
-        Chalk(INFO(`${taskContext.name} Analysis Begins!`));
+        Chalk(HINT(`${taskContext.name} Analysis Begins!`));
+      } else {
+        let status = await getVideoTaskStat(taskContext.name);
+        if(status === 4) {
+          Chalk(HINT(`${taskContext.name} Analysis is Done!`));
+          taskContext.status = 'NOT_STARTED';
+          taskContext.name = '';
+        }
       }
+    } else {      
       let status = await getVideoTaskStat(taskContext.name);
+      console.log(`test sooooooooooooooooo`, status);
       if(status === 4) {
-        Chalk(INFO(`${taskContext.name} Analysis is Done!`));
+        Chalk(HINT(`${taskContext.name} Analysis is Done!`));
         taskContext.status = 'NOT_STARTED';
         taskContext.name = '';
       }
-      console.log(taskContext);
-    } else {
-      console.log('all videos are analyzed');
+      console.log('No pending videos analysis task');
     }
 
+    console.log(taskContext);
   }
 
 }
