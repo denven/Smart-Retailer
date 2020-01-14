@@ -5,8 +5,12 @@ import VideoPlayer from './Charts/VideoPlayer';
 import axios from 'axios';
 import SingleDataPoint from './Charts/SingelDataPoint';
 import LineAndBarGraph from './Charts/LineAndBarGraph';
+import TransferList from './TransferList';
 
 export default function Statstics (props) {
+
+  const [selected, setSelected] = React.useState("all");
+  const [deselected, setDeselected] = React.useState();
   
   let graph = {
     duration: 0,
@@ -58,60 +62,115 @@ export default function Statstics (props) {
       ages["55+"] += 1;
     }
   })
-  // console.log(props, " this is full props")
-  // console.log(props.faces, " faces")
-  // console.log(props.tracking, " tracking")
-  // console.log(props.recur, " recus")
+
+  console.log(props, " this is full props")
+  console.log(props.faces, " faces")
+  console.log(props.tracking, " tracking")
+  console.log(props.recur, " recus")
   
-  return(
-    <div className="statContainer">
-      <div className="upperRow">
-        <div className="videoContainer">
-          <VideoPlayer url={props.videoList[props.listNumber - 1].s3_url}/>
-        </div>
-        <div className="singleData">
-          <div className="pie">
-            <PieChart 
+  if (props.listNumber === -1) {
+    return(
+      <div className="statContainer">
+        <div className="upperRow">
+          <div className="videoContainer">
+            <TransferList/>
+          </div>
+          <div className="singleData">
+            <div className="pie">
+              <PieChart 
+                listNumber={props.listNumber}
+                ages={ages}  
+              />
+            </div>
+            <div className="pie">
+              <PieChart 
               listNumber={props.listNumber}
-              ages={ages}  
-            />
+              emotions={emotions}
+              />
+            </div>
           </div>
-          <div className="pie">
-            <PieChart 
+        </div>
+        <div className="bottomRow">
+          <div className="bottomLeft">
+            <div className="singles">
+            <SingleDataPoint 
             listNumber={props.listNumber}
-            emotions={emotions}
+            recur={props.recur}
+            />
+            </div>
+            <div className="singles">
+            <SingleDataPoint 
+            listNumber={props.listNumber}
+            stayTime={props.tracking}
+            />
+            </div>
+            <div className="singles">
+            <SingleDataPoint 
+            listNumber={props.listNumber}
+            returnTime={props.recur}
+            />
+            </div>
+          </div>
+          <div className="bottomRight">
+            <LineAndBarGraph 
+            listNumber={props.listNumber}
+            graph={graph}
             />
           </div>
         </div>
       </div>
-      <div className="bottomRow">
-        <div className="bottomLeft">
-          <div className="singles">
-          <SingleDataPoint 
-          listNumber={props.listNumber}
-          recur={props.recur}
-          />
+    );
+  } else {
+    return(
+      <div className="statContainer">
+        <div className="upperRow">
+          <div className="videoContainer">
+            <VideoPlayer url={props.videoList[props.listNumber - 1].s3_url}/>
           </div>
-          <div className="singles">
-          <SingleDataPoint 
-          listNumber={props.listNumber}
-          stayTime={props.tracking}
-          />
-          </div>
-          <div className="singles">
-          <SingleDataPoint 
-          listNumber={props.listNumber}
-          returnTime={props.recur}
-          />
+          <div className="singleData">
+            <div className="pie">
+              <PieChart 
+                listNumber={props.listNumber}
+                ages={ages}  
+              />
+            </div>
+            <div className="pie">
+              <PieChart 
+              listNumber={props.listNumber}
+              emotions={emotions}
+              />
+            </div>
           </div>
         </div>
-        <div className="bottomRight">
-          <LineAndBarGraph 
-          listNumber={props.listNumber}
-          graph={graph}
-          />
+        <div className="bottomRow">
+          <div className="bottomLeft">
+            <div className="singles">
+            <SingleDataPoint 
+            listNumber={props.listNumber}
+            recur={props.recur}
+            />
+            </div>
+            <div className="singles">
+            <SingleDataPoint 
+            listNumber={props.listNumber}
+            stayTime={props.tracking}
+            />
+            </div>
+            <div className="singles">
+            <SingleDataPoint 
+            listNumber={props.listNumber}
+            returnTime={props.recur}
+            />
+            </div>
+          </div>
+          <div className="bottomRight">
+            <LineAndBarGraph 
+            listNumber={props.listNumber}
+            graph={graph}
+            />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 }

@@ -92,5 +92,27 @@ export default function App (){
           </div>
         </>
       );
+  } else if (state === "all") {
+    return (
+      <>
+          <div className='container'>
+            <div className="sideBar">
+              <VerticalTabs 
+                changeView={setView}
+                videoList={videoList}
+              />
+            </div>
+            <div className="statistics">
+              <Statistics 
+                listNumber={-1}
+                videoList={videoList}
+                recur={recur}
+                tracking={tracking}
+                faces={faces}
+              />
+            </div>
+          </div>
+        </>
+    )
   }
 }
