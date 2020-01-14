@@ -4,42 +4,19 @@
 import 'react-dropzone-uploader/dist/styles.css'
 import Dropzone from 'react-dropzone-uploader'
 
-<<<<<<< HEAD
-const uploadAction = () =>{
-  let formData = new FormData();
-  let videoFiles = document.querySelector('#myFile');  
-  let video = videoFiles.files[0];
-  formData.append("video", video);
-  console.log(video);
-
-
-  axios.post(`/upload`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-  }).catch((err) => {
-    console.log(err , " also the name of the video is " + formData)
-  })
-}
-=======
 import React from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
 export default function MyUploader () {
->>>>>>> aeee10629c4a61bca85b48b386540852a9aeda66
 
   // specify upload params and url for your files
-<<<<<<< HEAD
-  const getUploadParams = ({ meta }) => { return { url: '/upload' } }
-=======
   const getUploadParams = ({ file, meta }) => { 
     const body = new FormData();
     console.log(`This is file and meta from getUPloadParams`, file, meta);
     body.append('VID', file);  //this is one validation
     return { url: '/upload', body };
   }
->>>>>>> aeee10629c4a61bca85b48b386540852a9aeda66
   
   // called every time a file's `status` changes
   const handleChangeStatus = ({ meta, file }, status) => { 
@@ -60,12 +37,6 @@ export default function MyUploader () {
 }
 
   // receives array of files that are done uploading when submit button is clicked
-<<<<<<< HEAD
-  const handleSubmit = (files) => { 
-    console.log(files, " this is files");
-    console.log(files.map(f => f.meta));
-   }
-=======
   async function handleSubmit (files) { 
 
     for( const file of files) {
@@ -89,7 +60,6 @@ export default function MyUploader () {
       </span>
     )
   }
->>>>>>> aeee10629c4a61bca85b48b386540852a9aeda66
  
   return (   
     <div>
