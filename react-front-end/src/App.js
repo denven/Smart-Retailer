@@ -14,7 +14,7 @@ export default function App (){
   useEffect(() => {
     axios.get(`/videos`)
     .then(res => {
-      setVideoList = res.data;
+      setVideoList(res.data);
     });
   },[])
   
