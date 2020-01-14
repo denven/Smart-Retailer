@@ -26,15 +26,15 @@ const getAgeRangeCategory = (AgeRange) => {
 
   let medianAge = Math.ceil((AgeRange.Low + AgeRange.High) / 2);
 
-  if (medianAge < 18) return 0; // Children
+  if (medianAge < 12) return 0; // Children
 
-  if (medianAge >= 18 && medianAge < 35) return 1; // Youth
+  if (medianAge >= 13 && medianAge < 19) return 1; // Teens 
 
-  if (medianAge >= 35 && medianAge < 55) return 2; //
+  if (medianAge >= 19 && medianAge < 35) return 2; // Youn Adult
   
-  if (medianAge >= 55 && medianAge < 65) return 3; //
+  if (medianAge >= 35 && medianAge < 55) return 3; // Middle-Aged
 
-  if (medianAge >= 65) return 4; // Seniors
+  if (medianAge >= 55) return 4; // Seniors
 
 }
 

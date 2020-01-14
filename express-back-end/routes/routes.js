@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
 const options = {
   storage: storage,
   limits: {
-    files: 5, // allow up to 5 files per request,
+    files: 3, // allow up to 3 files per request,
     fieldSize: 1024 * 1024 * 1024 // 1GB (max file size)
   },
   fileFilter: function (req, file, cb) {
@@ -55,9 +55,25 @@ module.exports = function() {
           res.json(videos);
         })
         .catch(err => {
-            console.log(err);
+          console.log(err);
         });
   });
+
+  // route for get all data from db
+  router.get('/all', (req, res) => {
+
+    let pVideos = knex('videos').select('*').orderBy('filmed_at', 'desc');
+    let pFaces = knex('faces').select('*').orderBy('video_id', 'desc');
+    let pRecurs = knex('recurs').select('*').orderBy('video_id', 'desc');
+    let pPersons = knex('persons').select('*').orderBy('video_id', 'desc');
+    let pTraffic = knex('traffic').select('*').orderBy('video_id', 'desc');
+
+    Promise.all([pVideos, pFaces, pRecurs, pPersons, pTraffic])
+    .then(data => res.json({videos: data[0], faces: data[1], recurs: data[2], persons: data[3], traffic: data[4]}))
+    .catch(err => console.log(err));
+
+  });
+
 
   // query recurs table with video_id
   router.get('/recurs/:vid', (req, res) => {
@@ -117,26 +133,24 @@ module.exports = function() {
   // for upload a single video file
   router.post('/upload', upload.single('VID'), async (req, res, next) => {
     const file = req.file   
+    console.log(file);
     if (!file) {
       return res.json({ Error: "Only mp4 video files supported" });
-      const error = new Error('Please upload a file')
-      error.httpStatusCode = 400
-      return next(error)
     } else {
-      console.log('File upload successfully');
+      console.log(`File ${file.originalname} upload successfully`);
       const fullpathname = path.join(__dirupload, file.originalname);
+      res.json('File Received!');
 
       // let data = await s3Client.uploadOneFile(fullpathname, APP_VIDEO_BUCKET_NAME);
       // console.log(`Uploaded ${data.length} face images to s3 successfully`);  
       db.addOneVideoFile(file.originalname);
 
-      startVideoRekognition(file.originalname);      
+      // startVideoRekognition(file.originalname);      
     }
-    res.send(file);
 
   })
 
-  router.post('/uploads', upload.array('myFiles', 12), (req, res, next) => {
+  router.post('/uploads', upload.array('VID', 3), (req, res, next) => {
     const files = req.files
     if (!files) {
       const error = new Error('Please choose files')
