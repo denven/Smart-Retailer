@@ -68,6 +68,7 @@ const isPersonStillStaying = (timestamp, visit) => {
 /**
  * Return an array of objects which have the count of traffic by timestamp
  * @param {Array} TrackedPersons returned by startPersonTracking() in rek-traffic
+ * @param {String} videoKey
  */
 async function getTrackedTraffic (TrackedPersons, videoKey) {
 
@@ -75,28 +76,32 @@ async function getTrackedTraffic (TrackedPersons, videoKey) {
 
   let filmed_at = await getVideoFilmedDate(videoKey);
 
-  for(const visit of TrackedPersons) {
-    let count = 0;
-    TrackedPersons.forEach( person => {
-      if(isPersonStillStaying(visit.show_timestamp, person)) {
-        count++;
-        traffic.push( { timestamp: Math.floor(visit.show_timestamp / 1000), count: count } );
-      }
-    });
-  }
+  let allTimestamps = [];
 
   for(const visit of TrackedPersons) {
-    let count = 0;
-    TrackedPersons.forEach( person => {
-      if(isPersonStillStaying(visit.leave_timestamp, person)) {
-        count++;
-        traffic.push( { timestamp: Math.floor(visit.leave_timestamp / 1000), count: count } );
-      }
-    });
+    allTimestamps.push({ts: visit.show_timestamp, flag: 'SHOW'}),
+    allTimestamps.push({ts: visit.leave_timestamp, flag: 'LEAVE'})
   }
 
-  let data = _(traffic).orderBy(['timestamp', 'asc']).uniqBy('timestamp').value();
+  let count = 0;
+  let allVisits = _(allTimestamps).orderBy(['ts', 'asc']);
+  
+  for(const visit of allVisits) {
+  
+    count += ((visit.flag === 'SHOW') ? 1 : -1);
 
+    let repeatedIndex = _.findIndex(traffic, item => {    
+      return (item.timestamp === visit.ts);
+    });
+
+    if(repeatedIndex >= 0) {
+      traffic[repeatedIndex].count = count;  //update
+    }else{
+      traffic.push({timestamp: visit.ts, count: count });
+    }
+  }
+
+  let data = _(traffic).orderBy(['timestamp', 'asc']).value();
   return data;
 }
 
@@ -117,7 +122,8 @@ const getAvgRecuringDate = (recurs, videoKey) => {
   return videoVisits;
 }
 
- module.exports = { 
+
+module.exports = { 
    getMostConfidentEmotion, 
    getAgeRangeCategory,
    getTrackedTraffic,
@@ -125,4 +131,4 @@ const getAvgRecuringDate = (recurs, videoKey) => {
    getVideoFilmedDate,
    getVideoS3URL,
    getAvgRecuringDate
-  }
+}
