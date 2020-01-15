@@ -1,15 +1,20 @@
-import React, { useEffect }from 'react';
-import '../Statistics.css';
-import axios from 'axios';
+import React from 'react'
+import ReactPlayer from 'react-player' 
 
-export default function VideoPlayer (props) {
-  let video=props.url;
-  console.log(video);
+export default function MyVideoPlayer (props) {
+   
   return(
-    <>
-      <video width='400' className="video" controls>
-        <source src={`${video}`} type="video/mp4"/>
-      </video>
-    </>
+
+    <ReactPlayer url={props.url} width='100%' height='100%' controls />
+
+    // <VideoPlayer controls
+    //   url={props.url} width={400} // height={300} autoplay
+    // />
+
+    // <>
+    //   <video id='s3video' width='400' className="video" controls onLoad autoPlay>
+    //     <source src={`${props.url}`} type="video/mp4"/>
+    //   </video>
+    // </>
   );
 };

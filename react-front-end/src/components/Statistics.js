@@ -1,7 +1,7 @@
 import React, {useEffect}from 'react';
 import './Statistics.css';
 import PieChart from './Charts/PieChart';
-import VideoPlayer from './Charts/VideoPlayer';
+import MyVideoPlayer from './Charts/VideoPlayer';
 import SingleDataPoint from './Charts/SingelDataPoint';
 import LineAndBarGraph from './Charts/LineAndBarGraph';
 import TransferList from './TransferList';
@@ -151,6 +151,7 @@ export default function Statstics (props) {
       }
     }
 
+    console.log(props, " this is inside stats")
     props.faces.forEach(person => {
       emotions[person.emotion] += 1;
       if (person.age === 0) {
@@ -170,7 +171,7 @@ export default function Statstics (props) {
       <div className="statContainer">
         <div className="upperRow">
           <div className="videoContainer">
-            <VideoPlayer url={props.videoList[props.listNumber - 1].s3_url}/>
+            <MyVideoPlayer url={props.videoList[props.listNumber - 1].s3_url}/>
           </div>
           <div className="singleData">
             <div className="pie">

@@ -2,8 +2,8 @@
 .statContainer {
   display: flex;
   flex-direction: column;
-  height: 99vh;
-  width: 83vw;
+  height: 98vh;
+  width: 82vw;
 }
 
 .upperRow {
@@ -90,6 +90,6 @@
 
 .all {
   position: absolute;
-  top: 810px;
+  top: 640px;
   right: 40px;
 }

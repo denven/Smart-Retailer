@@ -36,18 +36,21 @@ export default function App (){
     .then(res => {
       setVideoList(res.data.reverse());
     })
-    axios.get(`/recurs/${state - 2}`)
-    .then(res => {
-      setRecur(res.data);
-    }).catch(err => console.log(err));
-    axios.get(`/track/${state - 2}`)
-    .then(res => {
-      setTracking(res.data);
-    });
-    axios.get(`/faces/${state - 2}`)
-    .then(res => {
-      setFaces(res.data);
-    });
+    
+      axios.get(`/recurs/${state - 2}`)
+      .then(res => {
+        setRecur(res.data);
+      }).catch(err => console.log(err));
+      axios.get(`/track/${state - 2}`)
+      .then(res => {
+        setTracking(res.data);
+      });
+      axios.get(`/faces/${state - 2}`)
+      .then(res => {
+        setFaces(res.data);
+        console.log(res.data, " axios faces")
+      });
+    
   },[state]);
   useEffect(() => {
     axios.get('/all/')

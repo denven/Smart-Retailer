@@ -2,6 +2,7 @@ import React from 'react';
 import { ResponsivePie } from '@nivo/pie'
 
 export default function MyResponsivePie (props) {
+  console.log(props, " this is inside pie")
   if (props.emotions) {
 
     let data = [

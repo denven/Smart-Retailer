@@ -1,6 +1,7 @@
 import { ResponsiveLine } from '@nivo/line'
 import React from 'react';
 import { msTohhmmss } from '../../helpers/helpers'
+import { orderBy, uniq } from 'lodash';
 
 export default function MyResponsiveLine (props){
   let data = []
@@ -18,8 +19,7 @@ export default function MyResponsiveLine (props){
           "data": []
         }
       )
-    }
-    
+    }    
 
     const dataTest = [
       {
@@ -48,12 +48,15 @@ export default function MyResponsiveLine (props){
       for(let video in props.graph.multiGraph) {
         if (data[i].id === video) {
           for (let j = 0; j < props.graph.multiGraph[video].timestamp.length; j++) {
-            data[i].data.push({"x": props.graph.multiGraph[video].timestamp[j], "y": props.graph.multiGraph[video].count[j]}) 
+            data[i].data.push({
+              "x": msTohhmmss(props.graph.multiGraph[video].timestamp[j]), 
+              "y": props.graph.multiGraph[video].count[j]}) 
           }
         }
       }
     }
-    console.log(data);
+
+    console.log('DAAAAAAAAAAAAAATAAA LINE CHART ALL', data);
     return(
       <ResponsiveLine
           data={data}
@@ -127,21 +130,42 @@ export default function MyResponsiveLine (props){
       }
     }
   }
-  
+
   // for (let i = 0; i < props.graph.timestamp.length; i++) {  
+  let points = [];
   props.graph.timestamp.forEach( (timestamp, index) => {  
     if(index === 0 && timestamp !== 0) {
-      data[0].data.push( {"x": 0, "y": 0});
+      points.push( {"x": msTohhmmss(0), "y": 0});
     }  
-    data[0].data.push( {"x": msTohhmmss(timestamp), "y": props.graph.count[index]});
+    points.push( {"x": msTohhmmss(timestamp), "y": props.graph.count[index]});
   });
+
+  if(points.length > 0) {
+    console.log('points', points, props.graph.timestamp.length);
+    for(let i = 0; i < points.length - 1; i++) {
+      if(points[i].x !== points[i+1].x) {
+        data[0].data.push(points[i]);
+      } else {
+        points[i+1].y = Math.max(points[i].y, points[i+1].y);
+      }
+    }
+    console.log(data[0].data.length);
+    data[0].data.push(points[points.length - 1]);
+  }
+
+  // props.graph.timestamp.forEach( (timestamp, index) => {  
+  //   if(index === 0 && timestamp !== 0) {
+  //     data[0].data.push( {"x": msTohhmmss(0), "y": 0});
+  //   }  
+  //   data[0].data.push( {"x": msTohhmmss(timestamp), "y": props.graph.count[index]});
+  // });
 
   console.log(data);
   return(
     <ResponsiveLine
         data={data}
         margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-        xScale={{ type: 'linear' }}
+        xScale={{ type: 'point' }}
         yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false, reverse: false }}
         axisTop={null}
         axisRight={null}
