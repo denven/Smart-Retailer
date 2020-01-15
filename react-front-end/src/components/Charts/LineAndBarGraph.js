@@ -23,7 +23,6 @@ export default function LineAndBarGraph (props) {
   //   )
   // }
   if (props.all) {
-    console.log(props.graph)
     return (
       <>
         <LineChart

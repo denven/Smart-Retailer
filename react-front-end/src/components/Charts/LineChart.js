@@ -67,7 +67,8 @@ export default function MyResponsiveLine (props){
           axisRight={null}
           axisBottom={{
               orient: 'bottom',
-              tickSize: 5,
+              tickValues: 10,
+              tickSize: 10,
               tickPadding: 5,
               tickRotation: 0,
               legend: `Time (S)`,

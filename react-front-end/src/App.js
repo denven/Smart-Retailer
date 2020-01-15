@@ -4,9 +4,15 @@ import VerticalTabs from './components/Sidebar';
 import Upload from './components/Upload';
 import Statistics from './components/Statistics';
 import axios from 'axios';
+import Dashboard from './components/Dashboard';
+import { TransitionGroup } from 'react-transition-group';
+import { CSSTransition } from 'react-transition-group';
+
+
 
 
 export default function App (){
+  
   const [state, setState] = useState(0);
   const [videoList, setVideoList] = useState([]);
   const [recur, setRecur] = useState([]);
@@ -36,7 +42,6 @@ export default function App (){
     .then(res => {
       setVideoList(res.data.reverse());
     })
-    
       axios.get(`/recurs/${state - 2}`)
       .then(res => {
         setRecur(res.data);
@@ -113,7 +118,7 @@ export default function App (){
   if (state === 0) {
     return (
       <>
-          <div className='container'>
+          <TransitionGroup className='container'>
             <div className="sideBar">
               <VerticalTabs 
               changeView={setView}
@@ -121,9 +126,16 @@ export default function App (){
               parsingFileName={parsingFileName}
               />
             </div>
-            <div className="statistics">
-            </div>
-          </div>
+            <CSSTransition
+              in={state}
+              timeout={1000}
+              classNames="slide"
+            >
+              <div className="statistics">
+                <Dashboard/>
+              </div>
+            </CSSTransition>
+          </TransitionGroup>
       </>
     )
   } else if (state === 1){

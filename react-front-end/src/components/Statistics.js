@@ -34,7 +34,7 @@ export default function Statstics (props) {
     "55+": 0
   }
 
-  console.log(props.appState, " in all");
+  console.log(props, " in all");
 
   // console.log(props, " this is full props")
   // console.log(props.faces, " faces")
@@ -80,7 +80,7 @@ export default function Statstics (props) {
     
 
     return(
-      <div className="statContainer">
+      <div id={`${props.listNumber}`} className="statContainer">
         <div className="upperRow">
           <div className="videoContainer">
             <TransferList
@@ -168,7 +168,7 @@ export default function Statstics (props) {
     })
 
     return(
-      <div className="statContainer">
+      <div id={`${props.listNumber}`} className="statContainer">
         <div className="upperRow">
           <div className="videoContainer">
             <MyVideoPlayer url={props.videoList[props.listNumber - 1].s3_url}/>
