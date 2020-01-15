@@ -53,7 +53,9 @@ export default function App (){
       axios.get(`/faces/${state - 2}`)
       .then(res => {
         setFaces(res.data);
+        console.log(res.data, " axios faces")
       });
+    
   },[state]);
   useEffect(() => {
     axios.get('/all/')
