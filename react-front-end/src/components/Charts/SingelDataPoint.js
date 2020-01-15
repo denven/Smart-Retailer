@@ -46,10 +46,7 @@ export default function SingleDataPoint(props){
             </div>
           <div className="dataDisplay">
             <p>
-              {numOfRecur}
-            </p>
-            <p>
-              {totalNum}
+              {numOfRecur} / {totalNum}
             </p>
           </div>
         </div>
