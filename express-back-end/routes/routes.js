@@ -9,7 +9,7 @@ const db = require('../database/db');
 const knex = db.knex;
 const s3Client = require('../filemanager/s3bucket');
 const { startVideoRekognition } = require('../rekognition/rek-videos');
-
+const _ = require('lodash')
 const path = require('path');
 const __dirhome = require('os').homedir();
 const __dirupload = path.join(__dirhome, 'lighthouse/final/Demo/Videos');
@@ -53,14 +53,16 @@ module.exports = function() {
     });
     
     // compose the message
-    setTimeout(() => {
-      knex('videos').select('name').where('ana_status', '<', 4).then( videos => {
-        if(videos.length > 0) {
-          res.write(`data: ${JSON.stringify({ hasUnread: true })}`);
+    setInterval(() => {
+            knex('videos').select('name').where('ana_status', '<', 4).then( videos => {
+        if(true || videos.length > 0) {
+          res.write(`data: ${JSON.stringify(videos)}`);
+          // res.write(`data: {"d": "${new Date()}"}\n\n`);
+          // res.flush();
           res.write('\n\n'); // whenever sending two '\n', the msg is sent automatically
         }
       })
-    }, 3000);
+    }, 300);
   });
  
 
@@ -121,7 +123,7 @@ module.exports = function() {
         return knex('traffic').select('*').where('video_id', req.params.vid);
       })
       .then( traffic => { 
-        track.traffic = traffic;
+        track.traffic = _(traffic).orderBy('timestamp', 'asc');
         res.json(track); 
       })
       .catch(err => {

@@ -41,7 +41,7 @@ const delay = (s) => {
 
 async function anaTaskManager () {
 
-  let chkInterval = 3;  //default
+  let chkInterval = 5;  //default
   let taskContext = { name: '', status: 'NOT_STARTED' }
 
   Chalk(INFO('Started to monitor video analysis tasks...'));
@@ -61,16 +61,15 @@ async function anaTaskManager () {
         taskContext.name = unAnaVideos[0].name;
         Chalk(HINT(`${taskContext.name} Analysis Begins!`));
 
-      } else {
+      } 
 
-        let status = await getVideoTaskStat(taskContext.name);
+      let status = await getVideoTaskStat(taskContext.name);
 
-        // start a new task when former task is done/restart for failed task
-        if(status === ANA_DONE) {
-          Chalk(HINT(`${taskContext.name} Analysis is Done!`));
-          taskContext.status = 'NOT_STARTED';
-          taskContext.name = '';
-        }
+      // start a new task when former task is done/restart for failed task
+      if(status === ANA_DONE) {
+        Chalk(HINT(`${taskContext.name} Analysis is Done!`));
+        taskContext.status = 'NOT_STARTED';
+        taskContext.name = '';
       }
 
     } else {    
@@ -82,7 +81,7 @@ async function anaTaskManager () {
         taskContext.name = '';
       }
 
-      if(status > 0 && status < ANA_DONE) {
+      if(taskContext.name && status > 0 && status < ANA_DONE) {
         Chalk(HINT(`Video ${taskContext.name} is being Analysing!`));
       }
       console.log('No pended videos analysis task');

@@ -7,19 +7,23 @@ import axios from 'axios';
 
 export default function App (){
  
-  const [ listening, setListening ] = useState(false);
+  // const [ listening, setListening ] = useState(false);
 
-  useEffect( () => {
-    if (!listening) {
-      // subscribe for server messages
-      const events = new EventSource('/events');
-      events.onmessage = (event) => {
-        const anaStates = JSON.parse(event.data);
-        console.log(anaStates);
-      };
-      setListening(true);
-    }
-  }, [listening]);
+  // useEffect( () => {
+  //   if (!listening) {
+  //       console.log("DUDE");
+  //     // subscribe for server messages
+  //     const events = window.events = new EventSource('/events');
+  //     events.onmessage = (event) => {
+  //       const anaStates = JSON.parse(event.data);
+  //       console.log("DUDE", anaStates);
+  //     };
+  //     events.onerror = err => {
+  //       console.log("well crap", err)
+  //     }
+  //     setListening(true);
+  //   }
+  // }, []);
 
   const [state, setState] = useState(0);
   const [videoList, setVideoList] = useState([]);
@@ -30,10 +34,22 @@ export default function App (){
     setState(view);
   }
 
-  useEffect(() => {
+    useEffect(() => {
     axios.get(`/videos`)
     .then(res => {
-      setVideoList(res.data);
+      setVideoList(res.data.reverse());
+    })
+    axios.get(`/recurs/${state - 2}`)
+    .then(res => {
+      setRecur(res.data);
+    }).catch(err => console.log(err));
+    axios.get(`/track/${state - 2}`)
+    .then(res => {
+      setTracking(res.data);
+    });
+    axios.get(`/faces/${state - 2}`)
+    .then(res => {
+      setFaces(res.data);
     });
   },[state])
 
@@ -92,27 +108,5 @@ export default function App (){
           </div>
         </>
       );
-  } else if (state === "all") {
-    return (
-      <>
-          <div className='container'>
-            <div className="sideBar">
-              <VerticalTabs 
-                changeView={setView}
-                videoList={videoList}
-              />
-            </div>
-            <div className="statistics">
-              <Statistics 
-                listNumber={-1}
-                videoList={videoList}
-                recur={recur}
-                tracking={tracking}
-                faces={faces}
-              />
-            </div>
-          </div>
-        </>
-    )
   }
 }
