@@ -8,27 +8,14 @@ import LineAndBarGraph from './Charts/LineAndBarGraph';
 import TransferList from './TransferList';
 
 export default function Statstics (props) {
-
   const [selected, setSelected] = React.useState("all");
-  const [deselected, setDeselected] = React.useState();
-  
   let graph = {
     duration: 0,
     timestamp: [],
     count: [],
+    multiGraph: {}
   }
-  if (props.listNumber > 0) {
-    graph.duration = props.videoList[props.listNumber-1].duration;
-
-    for (let dataPoint of props.tracking.traffic) {
-      graph.timestamp.push(dataPoint.timestamp);
-      graph.count.push(dataPoint.count);
-    }
-
-    
-    // graph[props.tracking.traffic.timestamp] = props.tracking.traffic.count;
-
-  }
+  
 
   let emotions = {
     "CONFUSED": 0,
@@ -48,43 +35,70 @@ export default function Statstics (props) {
     "55+": 0
   }
 
-  props.faces.forEach(person => {
-    emotions[person.emotion] += 1;
-    if (person.age === 0) {
-      ages["Pre-Teen"] += 1;
-    } else if (person.age === 1){
-      ages["Teen"] += 1;
-    } else if (person.age === 2){
-      ages["Young Adult"] += 1;
-    } else if (person.age === 3){
-      ages["Middle Aged"] += 1;
-    } else if (person.age === 4){
-      ages["55+"] += 1;
-    }
-  })
+  console.log(props.all);
 
-  console.log(props, " this is full props")
-  console.log(props.faces, " faces")
-  console.log(props.tracking, " tracking")
-  console.log(props.recur, " recus")
+  // console.log(props, " this is full props")
+  // console.log(props.faces, " faces")
+  // console.log(props.tracking, " tracking")
+  // console.log(props.recur, " recus")
   
   if (props.listNumber === -1) {
+    const listName = {}
+
+    props.all.videos.forEach(video => {
+      if (video.duration > graph.duration){
+        graph.duration = video.duration
+      }
+    });
+
+    for (let dataPoint of props.all.traffic) {
+      if (!graph.multiGraph[props.parsingFileName(dataPoint.name)]) {
+        graph.multiGraph[props.parsingFileName(dataPoint.name)] = {
+          name: props.parsingFileName(dataPoint.name),
+          timestamp: [],
+          count: []
+        }
+      } else {
+        graph.multiGraph[props.parsingFileName(dataPoint.name)].timestamp.push(dataPoint.timestamp);
+        graph.multiGraph[props.parsingFileName(dataPoint.name)].count.push(dataPoint.count);
+      }
+    }
+
+    props.all.faces.forEach(person => {
+      emotions[person.emotion] += 1;
+      if (person.age === 0) {
+        ages["Pre-Teen"] += 1;
+      } else if (person.age === 1){
+        ages["Teen"] += 1;
+      } else if (person.age === 2){
+        ages["Young Adult"] += 1;
+      } else if (person.age === 3){
+        ages["Middle Aged"] += 1;
+      } else if (person.age === 4){
+        ages["55+"] += 1;
+      }
+    })
+    console.log(props.all, " in all");
+
     return(
       <div className="statContainer">
         <div className="upperRow">
           <div className="videoContainer">
-            <TransferList/>
+            <TransferList
+              setSelected={setSelected}
+              selected={selected}
+              all={props.all}
+              parsingFileName={props.parsingFileName}
+            />
           </div>
           <div className="singleData">
             <div className="pie">
               <PieChart 
-                listNumber={props.listNumber}
                 ages={ages}  
               />
             </div>
             <div className="pie">
               <PieChart 
-              listNumber={props.listNumber}
               emotions={emotions}
               />
             </div>
@@ -94,33 +108,59 @@ export default function Statstics (props) {
           <div className="bottomLeft">
             <div className="singles">
             <SingleDataPoint 
-            listNumber={props.listNumber}
-            recur={props.recur}
+            recur={props.all.recurs}
             />
             </div>
             <div className="singles">
             <SingleDataPoint 
-            listNumber={props.listNumber}
-            stayTime={props.tracking}
+            stayTime={props.all}
             />
             </div>
             <div className="singles">
             <SingleDataPoint 
-            listNumber={props.listNumber}
-            returnTime={props.recur}
+            returnTime={props.all.recurs}
             />
             </div>
           </div>
           <div className="bottomRight">
             <LineAndBarGraph 
-            listNumber={props.listNumber}
+            all={true}
             graph={graph}
+            parsingFileName={props.parsingFileName}
             />
           </div>
         </div>
       </div>
     );
   } else {
+    // console.log(props.recur, " recurs");
+    // console.log(props.recur, " recurs");
+    // console.log(props.recur, " recurs");
+
+    if (props.listNumber > 0) {
+      graph.duration = props.videoList[props.listNumber-1].duration;
+  
+      for (let dataPoint of props.tracking.traffic) {
+        graph.timestamp.push(dataPoint.timestamp);
+        graph.count.push(dataPoint.count);
+      }
+    }
+
+    props.faces.forEach(person => {
+      emotions[person.emotion] += 1;
+      if (person.age === 0) {
+        ages["Pre-Teen"] += 1;
+      } else if (person.age === 1){
+        ages["Teen"] += 1;
+      } else if (person.age === 2){
+        ages["Young Adult"] += 1;
+      } else if (person.age === 3){
+        ages["Middle Aged"] += 1;
+      } else if (person.age === 4){
+        ages["55+"] += 1;
+      }
+    })
+
     return(
       <div className="statContainer">
         <div className="upperRow">

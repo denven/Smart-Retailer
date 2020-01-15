@@ -5,9 +5,6 @@ import { msTohhmmss } from '../../helpers/helpers'
 
 
 export default function SingleDataPoint(props){
-  console.log(props);
-
-
   
   if (props.recur) {
     let numOfRecur = 0;
@@ -39,6 +36,7 @@ export default function SingleDataPoint(props){
     );
   }
   if (props.stayTime) {
+    console.log(props.stayTime, " staytime");
     let totalTime = 0;
     let averageTime = 0;
 
@@ -87,11 +85,12 @@ export default function SingleDataPoint(props){
             </div>
           <div className="dataDisplay">
             <p>
-              {averageReturnTime + " days"}
+              {averageReturnTime.toFixed(0) + " days"}
             </p>
           </div>
         </div>
       </>
     );
   }
+
 }

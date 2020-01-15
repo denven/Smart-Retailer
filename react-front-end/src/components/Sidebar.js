@@ -40,53 +40,6 @@ export default function VerticalTabs(props) {
     props.changeView("all");
     setValue(-1);
   }
-  const parsingFileName = (fileName) => {
-    let name = fileName.slice(4,12);
-    let year = name.slice(0,4);
-    let month = name.slice(4,6)
-    let day = name.slice(6)
-    let newName = "";
-  
-    switch (month) {
-      case "01":
-        newName += "Jan ";
-        break;
-      case "02":
-        newName += "Feb ";
-        break;
-      case "03":
-        newName += "Mar ";
-        break;
-      case "04":
-        newName += "Apr ";
-        break;
-      case "05":
-        newName += "May ";
-        break;
-      case "06":
-        newName += "Jun ";
-        break;
-      case "07":
-        newName += "Jul ";
-        break;
-      case "08":
-        newName += "Aug ";
-        break;
-      case "09":
-        newName += "Sep ";
-        break;
-      case "10":
-        newName += "Oct ";
-        break;
-      case "11":
-        newName += "Nov ";
-        break;
-      case "12":
-        newName += "Dec ";
-        break;
-    }
-    return newName += day + " " + year;
-  }
 
   return (
     <div className={classes.root}>
@@ -105,13 +58,13 @@ export default function VerticalTabs(props) {
         />
         {(videos || []).map(video => (
         <Tab className = {classes.tab} 
-        label={parsingFileName(video.name)}
+        label={props.parsingFileName(video.name)}
         key={video.id} 
         />
         ))}
       </Tabs>
       <div className="all">
-        <Fab variant="extended" className="all" onClick={setViewToAll}>
+        <Fab variant="extended" onClick={setViewToAll}>
           All Statistics
         </Fab>
       </div>

@@ -60,7 +60,6 @@ async function anaTaskManager () {
         taskContext.status = 'IN_PROCESS';
         taskContext.name = unAnaVideos[0].name;
         Chalk(HINT(`${taskContext.name} Analysis Begins!`));
-
       } 
 
       let status = await getVideoTaskStat(taskContext.name);
@@ -76,6 +75,7 @@ async function anaTaskManager () {
 
       let status = await getVideoTaskStat(taskContext.name);
       if(status === ANA_DONE) {
+
         Chalk(HINT(`${taskContext.name} Analysis is Done!`));
         taskContext.status = 'NOT_STARTED';
         taskContext.name = '';

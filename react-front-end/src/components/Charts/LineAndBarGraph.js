@@ -8,7 +8,21 @@ import '../Statistics.css';
 export default function LineAndBarGraph (props) {
   const [graphToggle, setGraphToggle] = useState("line");
 
-  if (graphToggle === "line") {
+  if (props.all) {
+    console.log(props.graph)
+    return (
+      <>
+        <LineChart
+        graph={props.graph}
+        all={props.all}
+        parsingFileName={props.parsingFileName}
+        />
+      </>
+    )
+  }
+
+
+  if (graphToggle === "line" && (!props.all)) {
     return (
       <>
         <LineChart
