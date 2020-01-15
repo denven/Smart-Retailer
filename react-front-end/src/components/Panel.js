@@ -48,10 +48,14 @@ export default function SimpleExpansionPanel() {
         </ExpansionPanelSummary>
         <ExpansionPanelDetails className={classes.column}>
           <Typography>
-            Smart-Retailer is a web application that uses facial recognition software to extrapulate simple business analytics
-             from videos for the day to day operations.
+            Smart-Retailer is a web application that uses facial recognition software to extrapolate simple business analytics 
+            from videos for the day to day operations. This is only a small portion of what Amazon's AWS Rekgonition is 
+            capable of, we personally have not had much experience in our personal lives when it comes to facial recognition interactions from
+            our day to day. However we believe that this disruptive technology is on the rise and we should be posing questions on its ethics 
+            and boundaries. 
           </Typography>
           <Typography>
+            WARNING: DO NOT USE SOFTWARE IF YOU DO NOT WANT AMAZON TO HAVE YOUR PERSONAL DATA.
           </Typography>
         </ExpansionPanelDetails>
       </ExpansionPanel>
@@ -87,8 +91,14 @@ export default function SimpleExpansionPanel() {
           <Typography className={classes.heading}>Ethics</Typography>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails className={classes.column}>
-          <Typography style={{display: 'inline-block'}}>
+          <Typography>
             What are the ethics behind facial recognition in the commercial space?
+          </Typography>
+          <Typography>
+            Is there such thing as personal privacy in public space?
+          </Typography>
+          <Typography>
+            How do we want businesses to hold on to our data for more convenience? If so, what about targetted ads we'd like to keep private?
           </Typography>
         </ExpansionPanelDetails>
       </ExpansionPanel>
