@@ -136,7 +136,7 @@ export default function MyResponsiveLine (props){
     data[0].data.push( {"x": msTohhmmss(timestamp), "y": props.graph.count[index]});
   });
 
-  
+  console.log(data);
   return(
     <ResponsiveLine
         data={data}
