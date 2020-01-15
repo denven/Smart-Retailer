@@ -50,7 +50,6 @@ export default function Statstics (props) {
         graph.duration = video.duration
       }
     });
-    console.log(props.all.traffic, " stats traffic")
 
     for (let dataPoint of props.all.traffic) {
       if (!graph.multiGraph[props.parsingFileName(dataPoint.name)]) {
@@ -64,7 +63,6 @@ export default function Statstics (props) {
         graph.multiGraph[props.parsingFileName(dataPoint.name)].count.push(dataPoint.count);
       }
     }
-    console.log(graph.multiGraph, " multigraphs final product");
 
     props.all.faces.forEach(person => {
       emotions[person.emotion] += 1;
@@ -80,6 +78,7 @@ export default function Statstics (props) {
         ages["55+"] += 1;
       }
     })
+    console.log(props.all, " in all");
 
     return(
       <div className="statContainer">
@@ -106,23 +105,23 @@ export default function Statstics (props) {
           </div>
         </div>
         <div className="bottomRow">
-          {/* <div className="bottomLeft">
+          <div className="bottomLeft">
             <div className="singles">
             <SingleDataPoint 
-            recur={props.all.recur}
+            recur={props.all.recurs}
             />
             </div>
             <div className="singles">
             <SingleDataPoint 
-            stayTime={props.all.tracking}
+            stayTime={props.all}
             />
             </div>
             <div className="singles">
             <SingleDataPoint 
-            returnTime={props.all.recur}
+            returnTime={props.all.recurs}
             />
             </div>
-          </div> */}
+          </div>
           <div className="bottomRight">
             <LineAndBarGraph 
             all={true}

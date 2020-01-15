@@ -33,6 +33,7 @@ export default function SingleDataPoint(props){
     );
   }
   if (props.stayTime) {
+    console.log(props.stayTime, " staytime");
     let totalTime = 0;
     let averageTime = 0;
 
@@ -50,7 +51,7 @@ export default function SingleDataPoint(props){
             </div>
           <div className="dataDisplay">
             <p>
-              {averageTime.toFixed(2) + " seconds"}
+              {averageTime.toFixed(0) + " seconds"}
             </p>
           </div>
         </div>
@@ -80,11 +81,12 @@ export default function SingleDataPoint(props){
             </div>
           <div className="dataDisplay">
             <p>
-              {averageReturnTime + " days"}
+              {averageReturnTime.toFixed(0) + " days"}
             </p>
           </div>
         </div>
       </>
     );
   }
+
 }
