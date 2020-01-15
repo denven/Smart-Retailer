@@ -63,10 +63,10 @@ module.exports = function() {
   router.get('/all', (req, res) => {
 
     let pVideos = knex('videos').select('*').orderBy('filmed_at', 'desc');
-    let pFaces = knex('faces').select('*').orderBy('video_id', 'desc');
-    let pRecurs = knex('recurs').select('*').orderBy('video_id', 'desc');
-    let pPersons = knex('persons').select('*').orderBy('video_id', 'desc');
-    let pTraffic = knex('traffic').select('*').orderBy('video_id', 'desc');
+    let pFaces = knex('faces').select('*').orderBy('video_id', 'asc');
+    let pRecurs = knex('recurs').select('*').orderBy('video_id', 'asc');
+    let pPersons = knex('persons').select('*').orderBy('video_id', 'asc');
+    let pTraffic = knex('traffic').select('*').join('videos', 'traffic.video_id', 'videos.id').orderBy('video_id', 'asc');
 
     Promise.all([pVideos, pFaces, pRecurs, pPersons, pTraffic])
     .then(data => res.json({videos: data[0], faces: data[1], recurs: data[2], persons: data[3], traffic: data[4]}))
