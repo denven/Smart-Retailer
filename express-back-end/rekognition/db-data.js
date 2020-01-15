@@ -44,7 +44,7 @@ async function getVideoDuration (videoName) {
 }
 
 const getVideoS3URL = (videoName) => {
-  const s3_url = `https://` + APP_VIDEO_BUCKET_NAME + `.s3-` + AWS_DEFAULT_REGION + `amazonaws.com/` + videoName;
+  const s3_url = `https://` + APP_VIDEO_BUCKET_NAME + `.s3-` + AWS_DEFAULT_REGION + `.amazonaws.com/` + videoName;
   return s3_url;
 }
 
@@ -68,35 +68,44 @@ const isPersonStillStaying = (timestamp, visit) => {
 /**
  * Return an array of objects which have the count of traffic by timestamp
  * @param {Array} TrackedPersons returned by startPersonTracking() in rek-traffic
+ * @param {String} videoKey
  */
 async function getTrackedTraffic (TrackedPersons, videoKey) {
 
   let traffic = [];
 
-  let filmed_at = await getVideoFilmedDate(videoKey);
+  // let filmed_at = await getVideoFilmedDate(videoKey);
+  let dimension = await getVideoDimension(videoKey);
+
+  console.log('durationduration', dimension.duration);
+
+  let allTimestamps = [];
 
   for(const visit of TrackedPersons) {
-    let count = 0;
-    TrackedPersons.forEach( person => {
-      if(isPersonStillStaying(visit.show_timestamp, person)) {
-        count++;
-        traffic.push( { timestamp: Math.floor(visit.show_timestamp / 1000), count: count } );
-      }
-    });
+    allTimestamps.push({ts: visit.show_timestamp, flag: 'SHOW'}),
+    allTimestamps.push({ts: visit.leave_timestamp, flag: 'LEAVE'})
   }
 
-  for(const visit of TrackedPersons) {
-    let count = 0;
-    TrackedPersons.forEach( person => {
-      if(isPersonStillStaying(visit.leave_timestamp, person)) {
-        count++;
-        traffic.push( { timestamp: Math.floor(visit.leave_timestamp / 1000), count: count } );
-      }
+  let count = 0;
+  let allVisits = _(allTimestamps).orderBy(['ts', 'asc']);
+  
+  for(const visit of allVisits) {
+    if(Math.abs(dimension.duration * 1000 - visit.ts) > 500) {
+      count += ((visit.flag === 'SHOW') ? 1 : -1);
+    }    
+
+    let repeatedIndex = _.findIndex(traffic, item => {    
+      return (item.timestamp === visit.ts);
     });
+
+    if(repeatedIndex >= 0) {
+      traffic[repeatedIndex].count = count;  //update
+    }else{
+      traffic.push({timestamp: visit.ts, count: count });
+    }
   }
 
-  let data = _(traffic).orderBy(['timestamp', 'asc']).uniqBy('timestamp').value();
-
+  let data = _(traffic).orderBy(['timestamp', 'asc']).value();
   return data;
 }
 
@@ -117,7 +126,8 @@ const getAvgRecuringDate = (recurs, videoKey) => {
   return videoVisits;
 }
 
- module.exports = { 
+
+module.exports = { 
    getMostConfidentEmotion, 
    getAgeRangeCategory,
    getTrackedTraffic,
@@ -125,4 +135,4 @@ const getAvgRecuringDate = (recurs, videoKey) => {
    getVideoFilmedDate,
    getVideoS3URL,
    getAvgRecuringDate
-  }
+}

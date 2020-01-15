@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-// const cors = require('cors')
+const cors = require('cors')
 
 const PORT = 8080;
 const db = require('./database/db');
@@ -13,7 +13,7 @@ const { anaTaskManager } = require('./rekognition/task-manager');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static('public'));
 app.use(express.json());
-// app.use(cors());
+app.use(cors());
 
 const appRoutes = require("./routes/routes")();
 app.use("/", appRoutes); // mount all the routes to root path (no other divisions)

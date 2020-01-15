@@ -6,6 +6,8 @@ const ERROR = chalk.bold.red;
 const HINT = chalk.keyword('orange');
 const Chalk = console.log
 
+const ANA_DONE = 4
+
 async function chkUnAnaVideos () {
 
   try{
@@ -39,7 +41,7 @@ const delay = (s) => {
 
 async function anaTaskManager () {
 
-  let chkInterval = 3;  //default
+  let chkInterval = 5;  //default
   let taskContext = { name: '', status: 'NOT_STARTED' }
 
   Chalk(INFO('Started to monitor video analysis tasks...'));
@@ -48,38 +50,49 @@ async function anaTaskManager () {
 
     await delay(chkInterval);
     
-    let unAnaVideos = await chkUnAnaVideos();
+    let unAnaVideos = await chkUnAnaVideos();  // analysis not started/failed videos
+
     if(unAnaVideos.length > 0) {
+
       if(taskContext.status === 'NOT_STARTED') {
-        console.log(unAnaVideos[0].name);
+        // console.log(unAnaVideos[0].name);
         startVideoRekognition(unAnaVideos[0].name);
         taskContext.status = 'IN_PROCESS';
         taskContext.name = unAnaVideos[0].name;
         Chalk(HINT(`${taskContext.name} Analysis Begins!`));
-      } else {
-        let status = await getVideoTaskStat(taskContext.name);
-        if(status === 4) {
-          Chalk(HINT(`${taskContext.name} Analysis is Done!`));
-          taskContext.status = 'NOT_STARTED';
-          taskContext.name = '';
-        }
-      }
-    } else {      
+
+      } 
+
       let status = await getVideoTaskStat(taskContext.name);
-      console.log(`test sooooooooooooooooo`, status);
-      if(status === 4) {
+
+      // start a new task when former task is done/restart for failed task
+      if(status === ANA_DONE) {
         Chalk(HINT(`${taskContext.name} Analysis is Done!`));
         taskContext.status = 'NOT_STARTED';
         taskContext.name = '';
       }
-      console.log('No pending videos analysis task');
+
+    } else {    
+
+      let status = await getVideoTaskStat(taskContext.name);
+      if(status === ANA_DONE) {
+        Chalk(HINT(`${taskContext.name} Analysis is Done!`));
+        taskContext.status = 'NOT_STARTED';
+        taskContext.name = '';
+      }
+
+      if(taskContext.name && status > 0 && status < ANA_DONE) {
+        Chalk(HINT(`Video ${taskContext.name} is being Analysing!`));
+      }
+      console.log('No pended videos analysis task');
+
     }
 
-    console.log(taskContext);
+    // console.log(taskContext);
   }
 
 }
 
 // taskManager();
 
-module.exports = { anaTaskManager };
+module.exports = { chkUnAnaVideos, anaTaskManager };

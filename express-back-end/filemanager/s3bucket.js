@@ -32,7 +32,8 @@ const uploadOneFile = (fileName, bucketName) => {
     const params = {
         Bucket: bucketName,
         Key: fileName.split('/').pop(),  // key filename only by removing path
-        Body: stream
+        Body: stream,
+        ACL:'public-read' //grant video access permision
     };
 
     // Uploading files to the bucket

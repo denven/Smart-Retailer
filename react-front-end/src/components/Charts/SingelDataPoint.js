@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 // import Loading from '../Loading';
 
+import { msTohhmmss } from '../../helpers/helpers'
+
+
 export default function SingleDataPoint(props){
   // const [loading, setLoading] = useState(true);
   console.log(props.appState, " app state in single");
@@ -62,7 +65,8 @@ export default function SingleDataPoint(props){
     props.stayTime.persons.forEach(person => {
       totalTime += person.stay_duration;
     });
-    averageTime = totalTime / props.stayTime.persons.length;
+    averageTime = msTohhmmss(totalTime * 1000 / props.stayTime.persons.length);
+    
     return(
       <>
         <div>
@@ -73,7 +77,7 @@ export default function SingleDataPoint(props){
             </div>
           <div className="dataDisplay">
             <p>
-              {averageTime.toFixed(0) + " seconds"}
+              {averageTime}
             </p>
           </div>
         </div>

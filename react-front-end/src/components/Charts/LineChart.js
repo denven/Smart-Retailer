@@ -1,5 +1,6 @@
 import { ResponsiveLine } from '@nivo/line'
 import React from 'react';
+import { msTohhmmss } from '../../helpers/helpers'
 
 export default function MyResponsiveLine (props){
   let data = []
@@ -121,14 +122,19 @@ export default function MyResponsiveLine (props){
         data.push({
           "id": "Customers",
           "color": "hsl(168, 70%, 50%)",
-          "data": [
-          ]
+          "data": []
         });
       }
-
-      data[0].data.push( {"x": props.graph.timestamp[i], "y": props.graph.count[i]})
     }
   }
+  
+  // for (let i = 0; i < props.graph.timestamp.length; i++) {  
+  props.graph.timestamp.forEach( (timestamp, index) => {  
+    if(index === 0 && timestamp !== 0) {
+      data[0].data.push( {"x": 0, "y": 0});
+    }  
+    data[0].data.push( {"x": msTohhmmss(timestamp), "y": props.graph.count[index]});
+  });
 
   
   return(
@@ -193,4 +199,5 @@ export default function MyResponsiveLine (props){
         ]}
     />
   );
+  
 }
