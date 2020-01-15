@@ -1,14 +1,28 @@
 import React from 'react';
 import { ResponsiveBar } from '@nivo/bar'
-
+import { msTohhmmss } from '../../helpers/helpers'
 
 export default function MyResponsiveBar (props) {
 
   let data = [];
 
-  for (let i = 0; i < props.graph.timestamp.length; i++) {
-    data.push( {"Time": props.graph.timestamp[i], "customers": props.graph.count[i], "customersColor": "hsl(307, 70%, 50%)"})
-  }
+  // for (let i = 0; i < props.graph.timestamp.length; i++) {
+  //   data.push( {"Time": props.graph.timestamp[i], "customers": props.graph.count[i], "customersColor": "hsl(307, 70%, 50%)"})
+  // }
+
+  props.graph.timestamp.forEach( (timestamp, index) => {  
+    if(index === 0 && timestamp !== 0) {
+      data.push( { "Time": 0, "customers": 0, "customersColor": "hsl(307, 70%, 50%)" });        
+    }  
+    data.push( {
+      "Time": msTohhmmss(timestamp), 
+      "customers": props.graph.count[index], 
+      "customersColor": "hsl(307, 70%, 50%)"
+    });
+  });
+
+  console.log('barchartlkkkkkkkkkkkkkkkkkjjllk',data);
+
 
 
   return (<ResponsiveBar

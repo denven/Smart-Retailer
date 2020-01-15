@@ -150,8 +150,8 @@ async function cropFacesFromLocalVideo (allFrames, videoFileName) {
   const faceImgPath = path.join(__demoRootDir, 'Faces', videoFileName);
   let faces_bucket = await s3Client.createFolderInBucket(videoFileName, APP_FACES_BUCKET_NAME);
   
-  // let data = await s3Client.uploadMultiFiles(faceImgPath, APP_FACES_BUCKET_NAME, videoFileName);
-  // console.log(`Uploaded ${data.length} face images to s3 successfully`);       
+  let data = await s3Client.uploadMultiFiles(faceImgPath, APP_FACES_BUCKET_NAME, videoFileName);
+  console.log(`Uploaded ${data.length} face images to s3 successfully`);       
  
 }
 

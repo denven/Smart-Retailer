@@ -9,7 +9,7 @@ const db = require('../database/db');
 const knex = db.knex;
 const s3Client = require('../filemanager/s3bucket');
 const { startVideoRekognition } = require('../rekognition/rek-videos');
-
+const _ = require('lodash')
 const path = require('path');
 const __dirhome = require('os').homedir();
 const __dirupload = path.join(__dirhome, 'lighthouse/final/Demo/Videos');
@@ -44,6 +44,27 @@ const upload = multer(options);
 module.exports = function() {
 
   // router.get("/");   //home
+  router.get('/events', async (req, res) => {
+    // setup headers for the response in order to get the persistent HTTP connection
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+    });
+    
+    // compose the message
+    setInterval(() => {
+            knex('videos').select('name').where('ana_status', '<', 4).then( videos => {
+        if(true || videos.length > 0) {
+          res.write(`data: ${JSON.stringify(videos)}`);
+          // res.write(`data: {"d": "${new Date()}"}\n\n`);
+          // res.flush();
+          res.write('\n\n'); // whenever sending two '\n', the msg is sent automatically
+        }
+      })
+    }, 300);
+  });
+ 
 
   // get days having videos (filmed) uploaded, query videos table and get all the video_ids
   router.get('/videos', (req, res) => {
@@ -102,7 +123,7 @@ module.exports = function() {
         return knex('traffic').select('*').where('video_id', req.params.vid);
       })
       .then( traffic => { 
-        track.traffic = traffic;
+        track.traffic = _(traffic).orderBy('timestamp', 'asc');
         res.json(track); 
       })
       .catch(err => {
@@ -126,6 +147,41 @@ module.exports = function() {
       });
   });  
 
+
+  // db reset endpoints
+  router.get('/reset/:type', (req, res) => {
+
+    if (req.params.type === 'all') {
+      knex('videos').select('id').orderBy('id', 'desc').then( ids => {
+        console.log(ids);
+        let deletes = ids.map(id => {
+          return knex('videos').where('id', id.id).del();
+        });
+        Promise.all(deletes).then(data => {
+          res.end('All videos analysis records are removed:', data);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      });
+
+    } else {
+
+      knex('videos').select('*').orderBy('id', 'desc').then( ids => {
+        if(ids.length > 0) {
+          knex('videos').where('id', ids[0].id).del()
+          .then( data => res.end('The last video analysis records is removed:', data));
+        }          
+      })
+      .catch(err => {
+        console.log(err);
+      }); 
+
+    }
+
+  });
+
+
   // html page used to test upload file
   router.get('/', (req,res) => {
     console.log(__dirname);
@@ -143,8 +199,8 @@ module.exports = function() {
       const fullpathname = path.join(__dirupload, file.originalname);
       res.json('File Received!');
 
-      // let data = await s3Client.uploadOneFile(fullpathname, APP_VIDEO_BUCKET_NAME);
-      // console.log(`Uploaded ${data.length} face images to s3 successfully`);  
+      let data = await s3Client.uploadOneFile(fullpathname, APP_VIDEO_BUCKET_NAME);
+      console.log(`Uploaded ${data.length} face images to s3 successfully`);  
       db.addOneVideoFile(file.originalname);
 
       // startVideoRekognition(file.originalname);      

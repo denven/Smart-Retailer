@@ -98,7 +98,8 @@ async function getPersonsTracking (jobId, videoKey) {
 
   } while (nextToken);
 
-  console.log(`Page Content Number: ${allPersonsData.length}`);  // debug output
+  //console.log(`Page Content Number:`, require('util').inspect(allPersonsData, false, null, true));  // debug output
+  console.log(`Page Content Number:`, allPersonsData.length);  // debug output
 
   let persons = getPersonsInVideo(allPersonsData);
   Chalk(INFO(`Found ${persons.length} persons by tracking motions in video ${videoKey}`));

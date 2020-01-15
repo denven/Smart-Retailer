@@ -5,9 +5,26 @@ import Upload from './components/Upload';
 import Statistics from './components/Statistics';
 import axios from 'axios';
 
-
-
 export default function App (){
+ 
+  // const [ listening, setListening ] = useState(false);
+
+  // useEffect( () => {
+  //   if (!listening) {
+  //       console.log("DUDE");
+  //     // subscribe for server messages
+  //     const events = window.events = new EventSource('/events');
+  //     events.onmessage = (event) => {
+  //       const anaStates = JSON.parse(event.data);
+  //       console.log("DUDE", anaStates);
+  //     };
+  //     events.onerror = err => {
+  //       console.log("well crap", err)
+  //     }
+  //     setListening(true);
+  //   }
+  // }, []);
+
   const [state, setState] = useState(0);
   const [videoList, setVideoList] = useState([]);
   const [recur, setRecur] = useState([]);
@@ -32,7 +49,7 @@ export default function App (){
     setState(view);
   }
 
-  useEffect(() => {
+    useEffect(() => {
     axios.get(`/videos`)
     .then(res => {
       setVideoList(res.data.reverse());
@@ -164,6 +181,7 @@ export default function App (){
           </div>
         </>
       );
+
   } else if (state === "all") {
     return (
       <>

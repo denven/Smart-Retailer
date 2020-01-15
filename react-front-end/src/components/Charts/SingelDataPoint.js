@@ -1,6 +1,9 @@
 import React, { useEffect } from 'react';
 import axios from 'axios';
 
+import { msTohhmmss } from '../../helpers/helpers'
+
+
 export default function SingleDataPoint(props){
   
   if (props.recur) {
@@ -40,7 +43,8 @@ export default function SingleDataPoint(props){
     props.stayTime.persons.forEach(person => {
       totalTime += person.stay_duration;
     });
-    averageTime = totalTime / props.stayTime.persons.length;
+    averageTime = msTohhmmss(totalTime * 1000 / props.stayTime.persons.length);
+    
     return(
       <>
         <div>
@@ -51,7 +55,7 @@ export default function SingleDataPoint(props){
             </div>
           <div className="dataDisplay">
             <p>
-              {averageTime.toFixed(0) + " seconds"}
+              {averageTime}
             </p>
           </div>
         </div>
