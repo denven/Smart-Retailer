@@ -44,7 +44,7 @@ async function getVideoDuration (videoName) {
 }
 
 const getVideoS3URL = (videoName) => {
-  const s3_url = `https://` + APP_VIDEO_BUCKET_NAME + `.s3-` + AWS_DEFAULT_REGION + `amazonaws.com/` + videoName;
+  const s3_url = `https://` + APP_VIDEO_BUCKET_NAME + `.s3-` + AWS_DEFAULT_REGION + `.amazonaws.com/` + videoName;
   return s3_url;
 }
 
@@ -74,7 +74,10 @@ async function getTrackedTraffic (TrackedPersons, videoKey) {
 
   let traffic = [];
 
-  let filmed_at = await getVideoFilmedDate(videoKey);
+  // let filmed_at = await getVideoFilmedDate(videoKey);
+  let dimension = await getVideoDimension(videoKey);
+
+  console.log('durationduration', dimension.duration);
 
   let allTimestamps = [];
 
@@ -87,8 +90,9 @@ async function getTrackedTraffic (TrackedPersons, videoKey) {
   let allVisits = _(allTimestamps).orderBy(['ts', 'asc']);
   
   for(const visit of allVisits) {
-  
-    count += ((visit.flag === 'SHOW') ? 1 : -1);
+    if(Math.abs(dimension.duration * 1000 - visit.ts) > 500) {
+      count += ((visit.flag === 'SHOW') ? 1 : -1);
+    }    
 
     let repeatedIndex = _.findIndex(traffic, item => {    
       return (item.timestamp === visit.ts);
