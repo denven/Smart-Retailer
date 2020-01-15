@@ -11,6 +11,7 @@ export default function MyResponsiveLine (props){
   }
 
   if (props.all) {
+    console.log(props.graph.multiGraph, " multigraph");
     for (let video in props.graph.multiGraph) {
       data.push(
         {
@@ -21,41 +22,19 @@ export default function MyResponsiveLine (props){
       )
     }    
 
-    const dataTest = [
-      {
-        "id": "asdfasf",
-        "color": `hsl(${getRandomInt(180)}, ${getRandomInt(100)}%, ${getRandomInt(100)}%)`,
-        "data": [{"x": "0", "y": 8},{"x": "17", "y": 23},{"x": "18", "y": 38},{"x": "19", "y": 150}]
-      },
-      {
-        "id": "asdfadsfasdf",
-        "color": `hsl(${getRandomInt(180)}, ${getRandomInt(100)}%, ${getRandomInt(100)}%)`,
-        "data": [{"x": "0", "y": 30},{"x": "18", "y": 22},{"x": "24", "y": 50},{"x": "50", "y": 30}]
-      },
-      {
-        "id": "asdfasfasdfasdfasdf",
-        "color": `hsl(${getRandomInt(180)}, ${getRandomInt(100)}%, ${getRandomInt(100)}%)`,
-        "data": [{"x": "0", "y": 10},{"x": "7", "y": 7},{"x": "17", "y": 55},{"x": "18", "y": 10},{"x": "20", "y": 30}]
-      },
-      {
-        "id": "akljsdafjsla",
-        "color": `hsl(${getRandomInt(180)}, ${getRandomInt(100)}%, ${getRandomInt(100)}%)`,
-        "data": [{"x": "0", "y": 5},{"x": "10", "y": 16},{"x": "15", "y": 132},{"x": 18, "y": 50},{"x": 20, "y": 30}, {"x": 20, "y": 30}]
-      }
-    ]
-
     for (let i = 0; i < data.length; i++) {
       for(let video in props.graph.multiGraph) {
         if (data[i].id === video) {
           for (let j = 0; j < props.graph.multiGraph[video].timestamp.length; j++) {
             data[i].data.push({
-              "x": msTohhmmss(props.graph.multiGraph[video].timestamp[j]), 
+              "x": props.graph.multiGraph[video].timestamp[j], 
               "y": props.graph.multiGraph[video].count[j]}) 
           }
         }
       }
     }
 
+    console.log(data, " checking data sequence");
     console.log('DAAAAAAAAAAAAAATAAA LINE CHART ALL', data);
     return(
       <ResponsiveLine

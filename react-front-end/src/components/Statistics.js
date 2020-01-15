@@ -33,13 +33,16 @@ export default function Statstics (props) {
     "Middle Aged": 0,
     "55+": 0
   }
-
+  let sex = {
+    "Male": 0,
+    "Female": 0,
+  }
   console.log(props, " in all");
 
-  // console.log(props, " this is full props")
-  // console.log(props.faces, " faces")
-  // console.log(props.tracking, " tracking")
-  // console.log(props.recur, " recus")
+  console.log(props, " this is full props")
+  console.log(props.faces, " faces")
+  console.log(props.tracking, " tracking")
+  console.log(props.recur, " recus")
   
   if (props.listNumber === -1) {
     const listName = {}
@@ -76,6 +79,7 @@ export default function Statstics (props) {
       } else if (person.age === 4){
         ages["55+"] += 1;
       }
+      sex[person.sex] += 1;
     })
     
 
@@ -100,6 +104,7 @@ export default function Statstics (props) {
             <div className="pie">
               <PieChart 
               emotions={emotions}
+              sex={sex}
               appState={props.appState}
               />
             </div>
@@ -139,8 +144,7 @@ export default function Statstics (props) {
     );
   } else {
     // console.log(props.recur, " recurs");
-    // console.log(props.recur, " recurs");
-    // console.log(props.recur, " recurs");
+  
 
     if (props.listNumber > 0) {
       graph.duration = props.videoList[props.listNumber-1].duration;
@@ -165,8 +169,8 @@ export default function Statstics (props) {
       } else if (person.age === 4){
         ages["55+"] += 1;
       }
+      sex[person.sex] += 1;
     })
-
     return(
       <div id={`${props.listNumber}`} className="statContainer">
         <div className="upperRow">
@@ -184,6 +188,7 @@ export default function Statstics (props) {
             <div className="pie">
               <PieChart 
               listNumber={props.listNumber}
+              sex={sex}
               emotions={emotions}
               appState={props.appState}
               />
