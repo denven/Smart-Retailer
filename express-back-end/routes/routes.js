@@ -71,7 +71,7 @@ module.exports = function() {
 
     knex('videos')
         .select('*')
-        .orderBy('filmed_at', 'desc')
+        .orderBy('id', 'desc')
         .then( videos => {
           res.json(videos);
         })
@@ -82,16 +82,18 @@ module.exports = function() {
 
   // route for get all data from db
   router.get('/all', (req, res) => {
+ 
+    try{
+      let pVideos = knex('videos').select('*').orderBy('id', 'desc');
+      let pFaces = knex('faces').select('*').orderBy('video_id', 'asc');
+      let pRecurs = knex('recurs').select('*').orderBy('video_id', 'asc');
+      let pPersons = knex('persons').select('*').orderBy('video_id', 'asc');
+      let pTraffic = knex('traffic').select('*').join('videos', 'traffic.video_id', 'videos.id').orderBy('video_id', 'asc');
 
-    let pVideos = knex('videos').select('*').orderBy('filmed_at', 'desc');
-    let pFaces = knex('faces').select('*').orderBy('video_id', 'asc');
-    let pRecurs = knex('recurs').select('*').orderBy('video_id', 'asc');
-    let pPersons = knex('persons').select('*').orderBy('video_id', 'asc');
-    let pTraffic = knex('traffic').select('*').join('videos', 'traffic.video_id', 'videos.id').orderBy('video_id', 'asc');
-
-    Promise.all([pVideos, pFaces, pRecurs, pPersons, pTraffic])
-    .then(data => res.json({videos: data[0], faces: data[1], recurs: data[2], persons: data[3], traffic: data[4]}))
-    .catch(err => console.log(err));
+      Promise.all([pVideos, pFaces, pRecurs, pPersons, pTraffic])
+      .then(data => res.json({videos: data[0], faces: data[1], recurs: data[2], persons: data[3], traffic: data[4]}))
+      .catch(err => console.log(err));
+    } catch(error) {console.log(error)};
 
   });
 
@@ -136,48 +138,53 @@ module.exports = function() {
   router.get('/faces/:vid', (req, res) => {
     
     console.log(`Get Faces Reqeuest, ${req.params.vid}`);
-    knex('faces')
-      .select('*')
-      .where('video_id', req.params.vid)
-      .then( faces => {
-        res.json(faces);
-      })
-      .catch(err => {
-        console.log(err);
-      });
+    let vid = parseInt(req.params.vid);
+    console.log('THIS IS VID', vid, typeof(vid));
+    if(vid > 0) {
+      knex('faces').select('*').where('video_id', vid)
+        .then( faces => { res.json(faces); })
+        .catch(err => { console.log(err); });
+    } else {
+      console.log('NOT VALID request',typeof(req.params.vid));
+      res.json([]);
+    }
+
   });  
 
 
   // db reset endpoints
   router.get('/reset/:type', (req, res) => {
 
-    if (req.params.type === 'all') {
-      knex('videos').select('id').orderBy('id', 'desc').then( ids => {
-        console.log(ids);
-        let deletes = ids.map(id => {
-          return knex('videos').where('id', id.id).del();
-        });
-        Promise.all(deletes).then(data => {
-          res.end('All videos analysis records are removed:', data);
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      });
+    db.updateVideoAnaStatus("VID_20191228_063513.mp4", 0);
+    res.json('OK')
 
-    } else {
+    // if (req.params.type === 'all') {
+    //   knex('videos').select('id').orderBy('id', 'desc').then( ids => {
+    //     console.log(ids);
+    //     let deletes = ids.map(id => {
+    //       return knex('videos').where('id', id.id).del();
+    //     });
+    //     Promise.all(deletes).then(data => {
+    //       res.end('All videos analysis records are removed:', data);
+    //     })
+    //     .catch(err => {
+    //       console.log(err);
+    //     });
+    //   });
 
-      knex('videos').select('*').orderBy('id', 'desc').then( ids => {
-        if(ids.length > 0) {
-          knex('videos').where('id', ids[0].id).del()
-          .then( data => res.end('The last video analysis records is removed:', data));
-        }          
-      })
-      .catch(err => {
-        console.log(err);
-      }); 
+    // } else {
 
-    }
+    //   knex('videos').select('*').orderBy('id', 'desc').then( ids => {
+    //     if(ids.length > 0) {
+    //       knex('videos').where('id', ids[0].id).del()
+    //       .then( data => res.end('The last video analysis records is removed:', data));
+    //     }          
+    //   })
+    //   .catch(err => {
+    //     console.log(err);
+    //   }); 
+
+    // }
 
   });
 

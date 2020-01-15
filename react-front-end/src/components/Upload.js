@@ -76,7 +76,7 @@ export default function MyUploader () {
         submitButtonContent={'Upload files for analysis'}
         inputWithFilesContent={'Add Video Files ...'}
         styles={{
-          dropzone: { height: 600 },
+          dropzone: { height: "100vh" },
           dropzoneActive: { borderColor: 'green' }
         }}
       />  

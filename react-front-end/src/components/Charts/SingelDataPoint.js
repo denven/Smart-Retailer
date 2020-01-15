@@ -62,7 +62,11 @@ export default function SingleDataPoint(props){
     props.stayTime.persons.forEach(person => {
       totalTime += person.stay_duration;
     });
-    averageTime = msTohhmmss(totalTime * 1000 / props.stayTime.persons.length);
+
+    console.log(`totaltime`, totalTime);
+    if(props.stayTime.persons) {
+      averageTime = msTohhmmss(totalTime * 1000 / props.stayTime.persons.length); 
+    }
     
     return(
       <>
@@ -82,8 +86,9 @@ export default function SingleDataPoint(props){
     );
   }
 
+    console.log(props.returnTime, "This is returning time");
   if (props.returnTime) {
-    clearTimeout(load);
+    // clearTimeout(load);
     let totalReturnTime = 0;
     let count = 0;
     let averageReturnTime = 0;
@@ -93,7 +98,9 @@ export default function SingleDataPoint(props){
         count++;
       }
     });
-    averageReturnTime = totalReturnTime / count;
+
+    if(count > 0)
+      averageReturnTime = totalReturnTime / count;
 
     return(
       <>
@@ -105,7 +112,7 @@ export default function SingleDataPoint(props){
             </div>
           <div className="dataDisplay">
             <p>
-              {averageReturnTime.toFixed(0) + " days"}
+              {averageReturnTime + " days"}
             </p>
           </div>
         </div>
