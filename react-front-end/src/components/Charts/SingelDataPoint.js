@@ -1,9 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+// import Loading from '../Loading';
 
 export default function SingleDataPoint(props){
-  
+  // const [loading, setLoading] = useState(true);
+  console.log(props.appState, " app state in single");
+  let load;
+
+  // function loadingTimeout() {
+  //   load = setTimeout(() => {
+  //     setLoading(false);
+  //   }, 750);
+  // }
+  // useEffect(() => {
+    // setLoading(true);
+    // loadingTimeout();
+  // },[props.appState]);
+
+  // if (loading === true) {
+  //   return (
+  //     <Loading/>
+  //   )
+  // } 
   if (props.recur) {
+    clearTimeout(load);
+
     let numOfRecur = 0;
     let totalNum = 0;
     props.recur.forEach(person => {
@@ -33,6 +54,7 @@ export default function SingleDataPoint(props){
     );
   }
   if (props.stayTime) {
+    clearTimeout(load);
     console.log(props.stayTime, " staytime");
     let totalTime = 0;
     let averageTime = 0;
@@ -60,6 +82,7 @@ export default function SingleDataPoint(props){
   }
 
   if (props.returnTime) {
+    clearTimeout(load);
     let totalReturnTime = 0;
     let count = 0;
     let averageReturnTime = 0;

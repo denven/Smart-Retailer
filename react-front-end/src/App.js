@@ -6,7 +6,6 @@ import Statistics from './components/Statistics';
 import axios from 'axios';
 
 
-
 export default function App (){
   const [state, setState] = useState(0);
   const [videoList, setVideoList] = useState([]);
@@ -14,7 +13,6 @@ export default function App (){
   const [tracking, setTracking] = useState([]);
   const [faces, setFaces] = useState([]);
   const [all, setAll] = React.useState();
-
   const [ listening, setListening ] = useState(false);
 
   useEffect( () => {
@@ -33,6 +31,7 @@ export default function App (){
   }
 
   useEffect(() => {
+    
     axios.get(`/videos`)
     .then(res => {
       setVideoList(res.data.reverse());
@@ -107,6 +106,7 @@ export default function App (){
 
   // return <p>{JSON.stringify(recur)}</p>;
 
+
   if (state === 0) {
     return (
       <>
@@ -159,6 +159,7 @@ export default function App (){
                 tracking={tracking}
                 faces={faces}
                 parsingFileName={parsingFileName}
+                appState={state}
               />
             </div>
           </div>
@@ -181,6 +182,7 @@ export default function App (){
                 all={all}
                 setAll={setAll}
                 parsingFileName={parsingFileName}
+                appState={state}
               />
             </div>
           </div>

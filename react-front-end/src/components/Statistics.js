@@ -2,7 +2,6 @@ import React, {useEffect}from 'react';
 import './Statistics.css';
 import PieChart from './Charts/PieChart';
 import VideoPlayer from './Charts/VideoPlayer';
-import axios from 'axios';
 import SingleDataPoint from './Charts/SingelDataPoint';
 import LineAndBarGraph from './Charts/LineAndBarGraph';
 import TransferList from './TransferList';
@@ -35,7 +34,7 @@ export default function Statstics (props) {
     "55+": 0
   }
 
-  console.log(props.all);
+  console.log(props.appState, " in all");
 
   // console.log(props, " this is full props")
   // console.log(props.faces, " faces")
@@ -78,7 +77,7 @@ export default function Statstics (props) {
         ages["55+"] += 1;
       }
     })
-    console.log(props.all, " in all");
+    
 
     return(
       <div className="statContainer">
@@ -94,12 +93,14 @@ export default function Statstics (props) {
           <div className="singleData">
             <div className="pie">
               <PieChart 
-                ages={ages}  
+                ages={ages}
+                appState={props.appState}  
               />
             </div>
             <div className="pie">
               <PieChart 
               emotions={emotions}
+              appState={props.appState}
               />
             </div>
           </div>
@@ -109,21 +110,25 @@ export default function Statstics (props) {
             <div className="singles">
             <SingleDataPoint 
             recur={props.all.recurs}
+            appState={props.appState}
             />
             </div>
             <div className="singles">
             <SingleDataPoint 
             stayTime={props.all}
+            appState={props.appState}
             />
             </div>
             <div className="singles">
             <SingleDataPoint 
             returnTime={props.all.recurs}
+            appState={props.appState}
             />
             </div>
           </div>
           <div className="bottomRight">
             <LineAndBarGraph 
+            appState={props.appState}
             all={true}
             graph={graph}
             parsingFileName={props.parsingFileName}
@@ -171,13 +176,15 @@ export default function Statstics (props) {
             <div className="pie">
               <PieChart 
                 listNumber={props.listNumber}
-                ages={ages}  
+                ages={ages} 
+                appState={props.appState} 
               />
             </div>
             <div className="pie">
               <PieChart 
               listNumber={props.listNumber}
               emotions={emotions}
+              appState={props.appState}
               />
             </div>
           </div>
@@ -188,25 +195,30 @@ export default function Statstics (props) {
             <SingleDataPoint 
             listNumber={props.listNumber}
             recur={props.recur}
+            appState={props.appState}
             />
             </div>
             <div className="singles">
             <SingleDataPoint 
             listNumber={props.listNumber}
             stayTime={props.tracking}
+            appState={props.appState}
             />
             </div>
             <div className="singles">
             <SingleDataPoint 
             listNumber={props.listNumber}
             returnTime={props.recur}
+            appState={props.appState}
             />
             </div>
           </div>
           <div className="bottomRight">
             <LineAndBarGraph 
+            appState={props.appState}
             listNumber={props.listNumber}
             graph={graph}
+            
             />
           </div>
         </div>
