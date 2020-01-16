@@ -1,4 +1,4 @@
-import React, {useEffect}from 'react';
+import React, {useEffect, useRef}from 'react';
 import './Statistics.css';
 import PieChart from './Charts/PieChart';
 import MyVideoPlayer from './Charts/VideoPlayer';
@@ -14,7 +14,19 @@ export default function Statstics (props) {
     count: [],
     multiGraph: {}
   }
+
+  const ref = useRef();
   
+  useEffect(()=>{
+    console.log('hey', ref.current);
+    ref.current.classList.remove("slideAnimation");
+    // ref.current.classList.remove("slideOut");
+    setTimeout(()=> {
+      // ref.current.classList.toggle("slideOut");
+      ref.current.classList.toggle("slideAnimation");
+      
+    }, 0);
+  }, [props.appState]);
 
   let emotions = {
     "CONFUSED": 0,
@@ -84,7 +96,7 @@ export default function Statstics (props) {
     
 
     return(
-      <div id={`${props.listNumber}`} className="statContainer">
+      <div id={`${props.listNumber}`} ref={ref} className="statContainer">
         <div className="upperRow">
           <div className="videoContainer">
             <TransferList
@@ -172,7 +184,7 @@ export default function Statstics (props) {
       sex[person.sex] += 1;
     })
     return(
-      <div id={`${props.listNumber}`} className="statContainer">
+      <div id={`${props.listNumber}`} ref={ref} className="statContainer">
         <div className="upperRow">
           <div className="videoContainer">
             <MyVideoPlayer url={props.videoList[props.listNumber - 1].s3_url}/>
