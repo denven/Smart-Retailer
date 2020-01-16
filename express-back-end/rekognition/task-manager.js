@@ -84,7 +84,7 @@ async function anaTaskManager () {
       if(taskContext.name && status > 0 && status < ANA_DONE) {
         Chalk(HINT(`Video ${taskContext.name} is being Analysing!`));
       }
-      console.log('No pended videos analysis task');
+      // console.log('No pended videos analysis task');
 
     }
 

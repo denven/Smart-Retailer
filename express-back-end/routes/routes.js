@@ -56,8 +56,8 @@ module.exports = function() {
     setInterval(() => {
             knex('videos').select('name').where('ana_status', '<', 4).then( videos => {
         if(true || videos.length > 0) {
-          res.write(`data: ${JSON.stringify(videos)}`);
-          // res.write(`data: {"d": "${new Date()}"}\n\n`);
+          // res.write(`data: ${JSON.stringify(videos)}`);
+          res.write(`data: {"data": "${new Date()}"}\n\n`);
           // res.flush();
           res.write('\n\n'); // whenever sending two '\n', the msg is sent automatically
         }
@@ -139,13 +139,13 @@ module.exports = function() {
     
     console.log(`Get Faces Reqeuest, ${req.params.vid}`);
     let vid = parseInt(req.params.vid);
-    console.log('THIS IS VID', vid, typeof(vid));
+    // console.log('THIS IS VID', vid, typeof(vid));
     if(vid > 0) {
       knex('faces').select('*').where('video_id', vid)
         .then( faces => { res.json(faces); })
         .catch(err => { console.log(err); });
     } else {
-      console.log('NOT VALID request',typeof(req.params.vid));
+      // console.log('NOT VALID request',typeof(req.params.vid));
       res.json([]);
     }
 
