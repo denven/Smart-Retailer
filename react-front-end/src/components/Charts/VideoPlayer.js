@@ -5,7 +5,7 @@ export default function MyVideoPlayer (props) {
    
   return(
 
-    <ReactPlayer url={props.url} width='100%' height='100%' controls />
+    <ReactPlayer url={props.url} width='100%' height='100%' controls muted />
 
     // <VideoPlayer controls
     //   url={props.url} width={400} // height={300} autoplay
