@@ -10,19 +10,45 @@ export default function MyResponsiveBar (props) {
   //   data.push( {"Time": props.graph.timestamp[i], "customers": props.graph.count[i], "customersColor": "hsl(307, 70%, 50%)"})
   // }
 
+  // props.graph.timestamp.forEach( (timestamp, index) => {  
+  //   if(index === 0 && timestamp !== 0) {
+  //     data.push( { "Time": msTohhmmss(0), "customers": 0, "customersColor": "hsl(307, 70%, 50%)" });        
+  //   }  
+  //   data.push( {
+  //     "Time": msTohhmmss(timestamp), 
+  //     "customers": props.graph.count[index], 
+  //     "customersColor": "hsl(307, 70%, 50%)"
+  //   });
+  // });
+
+  let points = [];
   props.graph.timestamp.forEach( (timestamp, index) => {  
     if(index === 0 && timestamp !== 0) {
-      data.push( { "Time": 0, "customers": 0, "customersColor": "hsl(307, 70%, 50%)" });        
+      points.push( { "Time": msTohhmmss(0), "customers": 0, "customersColor": "hsl(307, 70%, 50%)" });      
     }  
-    data.push( {
+    points.push( {
       "Time": msTohhmmss(timestamp), 
       "customers": props.graph.count[index], 
       "customersColor": "hsl(307, 70%, 50%)"
     });
   });
 
-  console.log('barchartlkkkkkkkkkkkkkkkkkjjllk',data);
+  if(points.length > 0) {
+    let delta = 1;
+    if(points.length > 20){
+      delta = parseInt(points.length / 10);
+    }
 
+    for(let i = 0; i < points.length - delta; i = i + delta) {
+      // if(points[i].x !== points[i + delta].x) {
+        data.push(points[i]);
+      // } else {
+        // points[i + delta].y = Math.max(points[i].y, points[i + delta].y);
+      // }
+    }
+    data.push(points[points.length - delta]);
+    console.log(`barchart data`, data);
+  }
 
 
   return (<ResponsiveBar

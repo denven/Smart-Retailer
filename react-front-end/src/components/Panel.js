@@ -9,9 +9,9 @@ import './Statistics.css';
 
 const useStyles = makeStyles(theme => ({
   root: {
-    width: '85%',
-    height: '130px',
-    padding: '80px'
+    width: '90%',
+    height: '140px',
+    padding: '40px'
 
   },
   heading: {
@@ -37,7 +37,7 @@ export default function SimpleExpansionPanel() {
 
   return (
     <div className={classes.root}>
-      <ExpansionPanel>
+      <ExpansionPanel defaultExpanded={true}>        
         <ExpansionPanelSummary
           classes={{ 'root.Mui-expanded': classes['newroot.Mui-expanded']}}
           expandIcon={<ExpandMoreIcon />}
@@ -59,7 +59,7 @@ export default function SimpleExpansionPanel() {
           </Typography>
         </ExpansionPanelDetails>
       </ExpansionPanel>
-      <ExpansionPanel>
+      <ExpansionPanel defaultExpanded={true}>
         <ExpansionPanelSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2a-content"
@@ -78,11 +78,16 @@ export default function SimpleExpansionPanel() {
             3. Upload and wait!
           </Typography>
           <Typography>
-            Return data: Number of people in the video, age, sex, emotions (physical), average time in video, recurrences of previously analyzed people in videos, average time before recurrences
+            Extracted Information by our APP: 
+            Number of people in the video, 
+            age, sex, emotions (physical), 
+            average time in video, 
+            recurrences of previously analyzed people in videos, 
+            average time before recurrences
           </Typography>
         </ExpansionPanelDetails>
       </ExpansionPanel>
-      <ExpansionPanel>
+      <ExpansionPanel defaultExpanded={true}>
         <ExpansionPanelSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel3a-content"

@@ -20,7 +20,7 @@ const useStyles = makeStyles(theme => ({
   },
   list: {
     width: 380,
-    height: 210,
+    height: 150,
     backgroundColor: theme.palette.background.paper,
     overflow: 'auto',
   },
@@ -31,7 +31,7 @@ const useStyles = makeStyles(theme => ({
 
 export default function TransferList(props) {
   const classes = useStyles();
-  const [checked, setChecked] = React.useState([]);
+  const [checked, setChecked] = React.useState([1,2,3,4]);
   const [showVideos, setshowVideos] = React.useState(props.all.videos);
 
   const handleToggle = value => () => {

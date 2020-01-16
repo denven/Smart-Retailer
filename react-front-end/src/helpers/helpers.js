@@ -27,10 +27,10 @@ const msTohhmmss = ( msTimestamp ) => {
     minutes = padNumber(minutes, 2);
     seconds = padNumber(seconds, 2);
     // millisec = padNumber(millisec, 3);
+    if(hours > 0) return( hours + ":" + minutes + ":" + seconds );
+    if(minutes > 0 ) return (minutes + ":" + seconds + 's')
     if(millisec / 1000 < 60) return seconds + ' s';
-    if(millisec / 1000 < 3600) return (minutes + ":" + seconds + 's')
 
-    return( hours + ":" + minutes + ":" + seconds );
 }
 
 module.exports = {

@@ -202,9 +202,9 @@ export default function MyResponsivePie (props) {
         "color": "hsl(92, 50%, 70%)"
       },
       {
-        "id": "Anger",
-        "label": "Anger",
-        "value": props.emotions.ANGER,
+        "id": "Angry",
+        "label": "Angry",
+        "value": props.emotions.ANGRY,
         "color": "hsl(62, 50%, 70%)"
       },
       {
@@ -232,6 +232,7 @@ export default function MyResponsivePie (props) {
         "color": "hsl(122, 10%, 90%)"
       }
     ]
+
     return(
       <>
         <ResponsivePie

@@ -22,17 +22,55 @@ export default function MyResponsiveLine (props){
       )
     }    
 
+    let mlutiPoints = [];
+    for (let i = 0; i < data.length; i++) {
+      mlutiPoints.push({data: []});
+    }
+
     for (let i = 0; i < data.length; i++) {
       for(let video in props.graph.multiGraph) {
         if (data[i].id === video) {
           for (let j = 0; j < props.graph.multiGraph[video].timestamp.length; j++) {
-            data[i].data.push({
-              "x": props.graph.multiGraph[video].timestamp[j], 
+            mlutiPoints[i].data.push({
+              "x": (props.graph.multiGraph[video].timestamp[j]), 
               "y": props.graph.multiGraph[video].count[j]}) 
           }
         }
       }
     }
+
+    for (let i = 0; i < mlutiPoints.length; i++) {
+      if(mlutiPoints[i].data.length > 0) {
+        let delta = 1;
+        if(mlutiPoints[i].data.length > 20){
+          delta = parseInt(mlutiPoints[i].data.length / 10);
+        }
+
+        for(let j = 0; j < mlutiPoints[i].data.length - delta; j = j + delta) {
+          if(mlutiPoints[i].data[j].x < mlutiPoints[i].data[j + delta].x) {
+            let p = { x: parseInt(mlutiPoints[i].data[j].x / 1000), y: mlutiPoints[i].data[j].y   }
+            data[i].data.push(p);
+          } 
+          if(mlutiPoints[i].data[j].x === mlutiPoints[i].data[j + delta].x) {
+            mlutiPoints[i].data[j + delta].y = Math.max(mlutiPoints[i].data[j].y, mlutiPoints[i].data[j + delta].y);
+          }
+        }
+        let p = mlutiPoints[i].data[mlutiPoints[i].data.length - 1];
+        // data[i].data.push({x: parseInt(p.x/1000), y: p.y});
+      }
+    }
+
+    // for (let i = 0; i < data.length; i++) {
+    //   for(let video in props.graph.multiGraph) {
+    //     if (data[i].id === video) {
+    //       for (let j = 0; j < props.graph.multiGraph[video].timestamp.length; j++) {
+    //         data[i].data.push({
+    //           "x": msTohhmmss(props.graph.multiGraph[video].timestamp[j]), 
+    //           "y": props.graph.multiGraph[video].count[j]}) 
+    //       }
+    //     }
+    //   }
+    // }
 
     console.log(data, " checking data sequence");
     console.log('DAAAAAAAAAAAAAATAAA LINE CHART ALL', data);
@@ -121,12 +159,16 @@ export default function MyResponsiveLine (props){
   });
 
   if(points.length > 0) {
-    console.log('points', points, props.graph.timestamp.length);
-    for(let i = 0; i < points.length - 1; i++) {
-      if(points[i].x !== points[i+1].x) {
+    let delta = 1;
+    if(points.length > 20){
+      delta = parseInt(points.length / 10);
+    }
+
+    for(let i = 0; i < points.length - delta; i = i + delta) {
+      if(points[i].x !== points[i + delta].x) {
         data[0].data.push(points[i]);
       } else {
-        points[i+1].y = Math.max(points[i].y, points[i+1].y);
+        points[i + delta].y = Math.max(points[i].y, points[i + delta].y);
       }
     }
     console.log(data[0].data.length);

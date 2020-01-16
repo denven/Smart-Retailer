@@ -3,7 +3,7 @@ import ReactPlayer from 'react-player'
 
 export default function MyVideoPlayer (props) {
    
-  return(
+   return(
 
     <ReactPlayer url={props.url} width='100%' height='100%' controls muted />
 

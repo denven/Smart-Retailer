@@ -112,7 +112,7 @@ export default function SingleDataPoint(props){
             </div>
           <div className="dataDisplay">
             <p>
-              {averageReturnTime + " days"}
+              {parseInt(averageReturnTime) + " days"}
             </p>
           </div>
         </div>
