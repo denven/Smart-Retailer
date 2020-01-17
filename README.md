@@ -12,14 +12,14 @@ Note: You should have AWS credential keys to access the APIs, and be aware of yo
 
 
 ## What business analytics do we get from videos?
-Number of customers in the video
-age, sex, emotions (physical) 
-average time in video
-recurrences of previously analyzed people in videos
-average time before recurrences
+- Number of customers in the video
+- age, sex, emotions (physical) 
+- average time in video
+- recurrences of previously analyzed people in videos
+- average time before recurrences
 
 ## Screenshots
-
+![Analysis for new comers](./docs/01-Analysis-LineChart.png#pic_center=960x500))
 
 ## What's is the stack
 - Node.js
