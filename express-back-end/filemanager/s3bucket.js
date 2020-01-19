@@ -84,19 +84,6 @@ async function createFolderInBucket(videoName, targetBucket) {
   return bucketFolder;
 }
 
-// TODO
-// const deleteFacesBucket = (bucketName) => {
-// }
-
-// function test
-// let faces_bucket = createFolderInBucket('2019-12-29', "retailer-faces");
-// uploadOneFile('/home/chengwen/lighthouse/final/Demo/Videos/sample-0.mp4', "retailer-videos");
-// uploadMultiFiles('/home/chengwen/lighthouse/final/Demo/Faces/2019-12-30', faces_bucket)
-// .then((data) => console.log(`Files uploaded successfully.`))
-// .catch((err) => console.log(err));
-
-// listFilesInFolder('chengwen-faces', 'sample-1');
-
 module.exports = {
   uploadOneFile,
   uploadMultiFiles,
