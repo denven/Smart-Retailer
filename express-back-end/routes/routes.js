@@ -155,36 +155,35 @@ module.exports = function() {
   // db reset endpoints
   router.get('/reset/:type', (req, res) => {
 
-    db.updateVideoAnaStatus("VID_20191228_063513.mp4", 0);
-    res.json('OK')
+    // db.updateVideoAnaStatus("VID_20191228_063513.mp4", 0);
 
-    // if (req.params.type === 'all') {
-    //   knex('videos').select('id').orderBy('id', 'desc').then( ids => {
-    //     console.log(ids);
-    //     let deletes = ids.map(id => {
-    //       return knex('videos').where('id', id.id).del();
-    //     });
-    //     Promise.all(deletes).then(data => {
-    //       res.end('All videos analysis records are removed:', data);
-    //     })
-    //     .catch(err => {
-    //       console.log(err);
-    //     });
-    //   });
+    if (req.params.type === 'all') {
+      knex('videos').select('id').orderBy('id', 'desc').then( ids => {
+        console.log(ids);
+        let deletes = ids.map(id => {
+          return knex('videos').where('id', id.id).del();
+        });
+        Promise.all(deletes).then(data => {
+          res.end('All videos analysis records are removed:', data);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      });
 
-    // } else {
+    } else {
 
-    //   knex('videos').select('*').orderBy('id', 'desc').then( ids => {
-    //     if(ids.length > 0) {
-    //       knex('videos').where('id', ids[0].id).del()
-    //       .then( data => res.end('The last video analysis records is removed:', data));
-    //     }          
-    //   })
-    //   .catch(err => {
-    //     console.log(err);
-    //   }); 
+      knex('videos').select('*').orderBy('id', 'desc').then( ids => {
+        if(ids.length > 0) {
+          knex('videos').where('id', ids[0].id).del()
+          .then( data => res.end('The last video analysis records is removed:', data));
+        }          
+      })
+      .catch(err => {
+        console.log(err);
+      }); 
 
-    // }
+    }
 
   });
 
