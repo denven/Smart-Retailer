@@ -107,7 +107,7 @@
 
 .slideAnimation {
   opacity: 1;
-  animation: 1.5s ease-out 0s 1 slideIn;
+  animation: 1s ease-out 0s 1 slideIn;
 }
 
 .slideExit {
@@ -115,12 +115,12 @@
 }
 @keyframes slideIn{
   from {
-    opacity: 0;
-    transform: translateY(100%);
+    opacity: 0.5;
+    /* transform: translateY(100%); */
   }
   to {
     opacity: 1;
-    transform: translateY(0%);
+    /* transform: translateY(0%); */
   }
 }
 @keyframes slideOut{

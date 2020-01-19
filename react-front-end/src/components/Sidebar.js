@@ -50,7 +50,7 @@ export default function VerticalTabs(props) {
         onChange={handleChange}
         className={classes.tabs}
       >
-        <Tab className ={classes.logo} label="Smart-Retailer"/>
+        <Tab className ={classes.logo} label="Smart Retailer"/>
         <Tab className = {classes.tab} label="Upload" />
         <SearchBar 
         onSearch={setSearchTerm}
