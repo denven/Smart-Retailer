@@ -21,16 +21,27 @@ export default function App (){
   const [all, setAll] = React.useState();
   const [ listening, setListening ] = useState(false);
 
+  //for processing server-sent event
   useEffect( () => {
+
     if (!listening) {
-      // subscribe for server messages
-      const events = new EventSource('/events');
-      events.onmessage = (event) => {
-        const anaStates = JSON.parse(event.data);
+      
+      // subscribe for server messages, this only works when the full path put in
+      // other than the endpoint short path
+      const sse = new EventSource('http://localhost:8080/events');
+
+      sse.onmessage = (e) => {
+        const anaStates = JSON.parse(e.data);
+        console.log('DUDE WHEREIS THE EVENTS???????');
       };
+
+      sse.onopen = (e) => { console.log('event is opened', e); }
+      sse.onerror = (e) => { console.log('event has errors', e); }
+      sse.addEventListener("data", (e) => { console.log(e.data) });
+
       setListening(true);
     }
-  }, [listening]);
+  }, []);
 
   const setView = (view) => {
     setState(view);

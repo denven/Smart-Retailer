@@ -2,19 +2,21 @@
  * express routes for intercation with react front end
  */
 "use strict";
-
-const express = require('express');
-const router  = express.Router();
-const db = require('../database/db');
-const knex = db.knex;
-const s3Client = require('../filemanager/s3bucket');
-const { startVideoRekognition } = require('../rekognition/rek-videos');
 const _ = require('lodash')
 const path = require('path');
+const express = require('express');
+const router  = express.Router();
+
+const db = require('../database/db');
+const knex = db.knex;
+
+const s3Client = require('../filemanager/s3bucket');
 const __dirhome = require('os').homedir();
 const __dirupload = path.join(__dirhome, 'lighthouse/final/Demo/Videos');
+
 const APP_VIDEO_BUCKET_NAME = 'retailer-videos';
 
+// multer configurations
 const multer = require('multer');
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -41,28 +43,59 @@ const options = {
 
 const upload = multer(options);
 
+
+// ENDPOINTS DEFINITNIONS
 module.exports = function() {
 
-  // router.get("/");   //home
+  // server EventSource endpoint
   router.get('/events', async (req, res) => {
     // setup headers for the response in order to get the persistent HTTP connection
-    res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
+    // res.writeHead(200, {
+    //     'Content-Type': 'text/event-stream; charset=UTF-8',
+    //     'Cache-Control': 'no-cache',
+    //     'Connection': 'keep-alive',
+    //     // 'Access-Control-Allow-Credentials': true,
+    //     // enabling CORS
+    //     'Access-Control-Allow-Origin': "*",
+    //     'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+    // });
+
+    // while(true) {    
+    //   await delay(3);
+    //   res.write(`data: {"data": "${new Date()}"}\n\n`);  //test
+    //   res.flushHeaders();
+    // }
+
+    res.write({
+      'Content-Type': "text/event-stream",
+      'Cache-Control': "no-cache",
+      'Connection': "keep-alive",     
+      'Access-Control-Allow-Origin': "*",  // enabling CORS
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
     });
-    
-    // compose the message
+
     setInterval(() => {
-            knex('videos').select('name').where('ana_status', '<', 4).then( videos => {
-        if(true || videos.length > 0) {
-          // res.write(`data: ${JSON.stringify(videos)}`);
-          res.write(`data: {"data": "${new Date()}"}\n\n`);
-          // res.flush();
-          res.write('\n\n'); // whenever sending two '\n', the msg is sent automatically
-        }
-      })
-    }, 300);
+      res.write(`event: message\n`);
+      res.write(`data: ${new Date()}"}\n\n`);
+    }, 2000)
+    
+    //compose the message
+    // const interval = setInterval(() => {
+    //   knex('videos').select('name').where('ana_status', '<', 4).then( videos => {
+    //     if(true || videos.length > 0) {
+    //       // res.write(`status: ${JSON.stringify(videos)}`);
+    //       res.write(`event: message\n`);
+    //       res.write(`data: {"data": "${new Date()}"}\n\n`);  //test
+    //       res.flushHeaders();
+    //       // res.write('\n\n'); // whenever sending two '\n', the msg is sent automatically
+    //     }
+    //   })
+    // }, 1000);
+
+    // req.connection.addListener("close", () => {
+    //     clearInterval(interval);
+    // }, false);
+
   });
  
 
@@ -196,20 +229,22 @@ module.exports = function() {
 
   // for upload a single video file
   router.post('/upload', upload.single('VID'), async (req, res, next) => {
+
     const file = req.file   
     console.log(file);
+
     if (!file) {
       return res.json({ Error: "Only mp4 video files supported" });
     } else {
-      console.log(`File ${file.originalname} upload successfully`);
+      console.log(`Received a video file: ${file.originalname}`);
       const fullpathname = path.join(__dirupload, file.originalname);
       res.json('File Received!');
 
       let data = await s3Client.uploadOneFile(fullpathname, APP_VIDEO_BUCKET_NAME);
-      console.log(`Uploaded ${data.length} face images to s3 successfully`);  
+      console.log(`Uploaded video file ${file.originalname} to s3 successfully`);  
       db.addOneVideoFile(file.originalname);
 
-      // startVideoRekognition(file.originalname);      
+      // startVideoRekognition(file.originalname);      // moved to task manager
     }
 
   })
