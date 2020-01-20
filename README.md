@@ -21,8 +21,8 @@ Smart-Retailer is a web application that uses Amazon Recognition APIs to extrapo
 
 ## Screenshots
 ![Analysis for new customers-Bar Chart View](./docs/01-Analysis-BarChart.png#pic_center=960x500)
-![Analysis for new customers-Line Chart View](./docs/01-Analysis-LineChart.png#pic_center=960x500)
-![Analysis for recuring customers](./docs/01-Analysis-Recuring.png#pic_center=960x500)
+![Analysis for new customers-Line Chart View](./docs/02-Analysis-LineChart.png#pic_center=960x500)
+![Analysis for recuring customers](./docs/03-Analysis-Recuring.png#pic_center=960x500)
 
 ## What's the stack
 - Node.js
