@@ -4,9 +4,9 @@ const ffmpeg = require('ffmpeg');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 
-const APP_VIDEO_BUCKET_NAME = 'chengwen-video-bucket';
-const APP_FACES_BUCKET_NAME = 'chengwen-faces';
-const APP_FRAMES_BUCKET_NAME = 'chengwen-frames';
+const APP_VIDEO_BUCKET_NAME = 'video-bucket';
+const APP_FACES_BUCKET_NAME = 'faces';
+const APP_FRAMES_BUCKET_NAME = 'frames';
 
 const BUCKET_MAX_KEYS = 100;
 // const videoBucket = APP_VIDEO_BUCKET_NAME;

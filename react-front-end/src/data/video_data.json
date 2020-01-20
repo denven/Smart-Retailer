@@ -7,8 +7,8 @@
         "starts_at": 0,
         "duration": 1000,
         "upload_at": 1100,
-        "bucket_id": "chengwen_vids",
-        "url_addr": "www.s3.com/chengwen_vids"
+        "bucket_id": "vids",
+        "url_addr": "www.s3.com/vids"
       },
       {
         "id": 2,
@@ -16,8 +16,8 @@
         "starts_at": 0,
         "duration": 1000,
         "upload_at": 1200,
-        "bucket_id": "chengwen_vids",
-        "url_addr": "www.s3.com/chengwen_vids2"
+        "bucket_id": "vids",
+        "url_addr": "www.s3.com/vids2"
       }
     ]
 }

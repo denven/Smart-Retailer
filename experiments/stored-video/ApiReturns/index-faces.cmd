@@ -1,5 +1,5 @@
 aws rekognition index-faces \
-    --image '{"S3Object":{"Bucket":"chengwen-frames","Name":"frame00517.png"}}' \
+    --image '{"S3Object":{"Bucket":"frames","Name":"frame00517.png"}}' \
     --collection-id "frames" \
     --max-faces 10 \
     --quality-filter "AUTO" \
@@ -8,7 +8,7 @@ aws rekognition index-faces \
 
 
 aws rekognition index-faces \
-    --image '{"S3Object":{"Bucket":"chengwen-frames","Name":"frame01017.png"}}' \
+    --image '{"S3Object":{"Bucket":"frames","Name":"frame01017.png"}}' \
     --collection-id "frames" \
     --max-faces 10 \
     --quality-filter "AUTO" \
