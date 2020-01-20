@@ -25,18 +25,19 @@ export default function App (){
   useEffect( () => {
 
     if (!listening) {
-      
+
       // subscribe for server messages, this only works when the full path put in
       // other than the endpoint short path
-      const sse = new EventSource('http://localhost:8080/events');
+      const sse = new EventSource('/events');
 
       sse.onmessage = (e) => {
         const anaStates = JSON.parse(e.data);
-        console.log('DUDE WHEREIS THE EVENTS???????');
+        console.log('WHERE ARE THE EVENTS???????');
       };
 
       sse.onopen = (e) => { console.log('event is opened', e); }
       sse.onerror = (e) => { console.log('event has errors', e); }
+
       sse.addEventListener("data", (e) => { console.log(e.data) });
 
       setListening(true);
