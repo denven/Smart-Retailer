@@ -8,6 +8,8 @@ import React from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 
+import moment from 'moment';
+
 export default function MyUploader () {
 
   // specify upload params and url for your files
@@ -26,6 +28,9 @@ export default function MyUploader () {
     // } else if (status === 'aborted') {
     //   toast.warn(`${meta.name}, upload failed...`);
     // }  
+    if(status === 'error_validation') {
+      // toast.error(xxxx, { position: toast.POSITION.BOTTOM_RIGHT });
+    }
   }
   
   const delay = (s) => {
@@ -60,6 +65,17 @@ export default function MyUploader () {
       </span>
     )
   }
+
+  //validation for filenames
+  const IsInvalidFile = ({ meta }) => {
+
+    let dateTime = meta.name.slice(0, -3).replace(/[^0-9]/ig,"").slice(0,14);
+    if(moment(dateTime).isValid()) {
+      return false;
+    } else {
+      return `Invalid filename format, suggested filename: VID_20200120_123548.mp4`;
+    }
+  }
  
   return (   
     <div>
@@ -71,6 +87,7 @@ export default function MyUploader () {
         accept="video/mp4"
         inputContent="Drop Video(mp4) Files to upload!"
         maxSizeBytes={1024*1024*1024}  //1GB
+        validate={IsInvalidFile}
         autoUpload={true}
         maxFiles={3}
         submitButtonContent={'Upload files for analysis'}
@@ -84,9 +101,6 @@ export default function MyUploader () {
     </div>        
   )
 }
-
-
-
 
 // let selectedFiles = [];
 

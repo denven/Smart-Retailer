@@ -33,10 +33,19 @@ const options = {
     files: 3, // allow up to 3 files per request,
     fieldSize: 1024 * 1024 * 1024 // 1GB (max file size)
   },
-  fileFilter: function (req, file, cb) {
+
+  //up load validations 
+  fileFilter: async (req, file, cb) => {
     if (file.mimetype !== 'video/mp4') {
       return cb(null, false);
+    }    
+
+    let videoFiles = await knex('videos').select('name').where('name', file.originalname);
+    if(videoFiles.some( video => video.name === file.originalname)) {
+      console.log('DO NOT up load the same file again:', file.originalname);
+      return  cb(null, false);   // file with the same name are not allowed
     }
+
     cb(null, true);
   }
 }
@@ -49,52 +58,30 @@ module.exports = function() {
 
   // server EventSource endpoint
   router.get('/events', async (req, res) => {
+
     // setup headers for the response in order to get the persistent HTTP connection
-    // res.writeHead(200, {
-    //     'Content-Type': 'text/event-stream; charset=UTF-8',
-    //     'Cache-Control': 'no-cache',
-    //     'Connection': 'keep-alive',
-    //     // 'Access-Control-Allow-Credentials': true,
-    //     // enabling CORS
-    //     'Access-Control-Allow-Origin': "*",
-    //     'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
-    // });
-
-    // while(true) {    
-    //   await delay(3);
-    //   res.write(`data: {"data": "${new Date()}"}\n\n`);  //test
-    //   res.flushHeaders();
-    // }
-
-    res.write({
-      'Content-Type': "text/event-stream",
-      'Cache-Control': "no-cache",
-      'Connection': "keep-alive",     
-      'Access-Control-Allow-Origin': "*",  // enabling CORS
-      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive'
     });
+     
+    // compose the message
+    const interval = setInterval(() => {
+      knex('videos').select('name').where('ana_status', '<', 4).then( videos => {
+        if(true || videos.length > 0) {
+          // res.write(`status: ${JSON.stringify(videos)}`);
+          res.write(`event: message\n`);
+          res.write(`data: {"data": "${new Date()}"}\n\n`);  //test
+          res.flushHeaders();
+          // res.write('\n\n'); // whenever sending two '\n', the msg is sent automatically
+        }
+      })
+    }, 1000);
 
-    setInterval(() => {
-      res.write(`event: message\n`);
-      res.write(`data: ${new Date()}"}\n\n`);
-    }, 2000)
-    
-    //compose the message
-    // const interval = setInterval(() => {
-    //   knex('videos').select('name').where('ana_status', '<', 4).then( videos => {
-    //     if(true || videos.length > 0) {
-    //       // res.write(`status: ${JSON.stringify(videos)}`);
-    //       res.write(`event: message\n`);
-    //       res.write(`data: {"data": "${new Date()}"}\n\n`);  //test
-    //       res.flushHeaders();
-    //       // res.write('\n\n'); // whenever sending two '\n', the msg is sent automatically
-    //     }
-    //   })
-    // }, 1000);
-
-    // req.connection.addListener("close", () => {
-    //     clearInterval(interval);
-    // }, false);
+    req.connection.addListener("close", () => {
+        clearInterval(interval);
+    }, false);
 
   });
  
@@ -146,7 +133,6 @@ module.exports = function() {
   });
 
  
-
   // query traffic and persons table with video_id
   router.get('/track/:vid', (req, res) => {
 
@@ -240,9 +226,9 @@ module.exports = function() {
       const fullpathname = path.join(__dirupload, file.originalname);
       res.json('File Received!');
 
-      let data = await s3Client.uploadOneFile(fullpathname, APP_VIDEO_BUCKET_NAME);
-      console.log(`Uploaded video file ${file.originalname} to s3 successfully`);  
-      db.addOneVideoFile(file.originalname);
+      // let data = await s3Client.uploadOneFile(fullpathname, APP_VIDEO_BUCKET_NAME);
+      // console.log(`Uploaded video file ${file.originalname} to s3 successfully`);  
+      // db.addOneVideoFile(file.originalname);
 
       // startVideoRekognition(file.originalname);      // moved to task manager
     }
