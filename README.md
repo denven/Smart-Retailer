@@ -4,8 +4,8 @@ Smart-Retailer is a web application that uses Amazon Recognition APIs to extrapo
 
 ## How to use this APP?
 
-1. Just hit that Upload button
-2. Drag and drop mp4 files
+1. Just hit Upload Tab at the SiderBar
+2. Drag and drop mp4 files (files named as format: VID_YYYYMMDD_HHMMSS.mp4 will be accepted)
 3. Upload and drink a cup of coffee to wait the analysis is done!
 
 ### Note: 
@@ -20,9 +20,11 @@ Smart-Retailer is a web application that uses Amazon Recognition APIs to extrapo
 - Average time before recurrences
 
 ## Screenshots
-![Analysis for new comers](./docs/01-Analysis-LineChart.png#pic_center=960x500)
+![Analysis for new customers-Bar Chart View](./docs/01-Analysis-BarChart.png#pic_center=960x500)
+![Analysis for new customers-Line Chart View](./docs/02-Analysis-LineChart.png#pic_center=960x500)
+![Analysis for recuring customers](./docs/03-Analysis-Recuring.png#pic_center=960x500)
 
-## What's is the stack
+## What's the stack
 - Node.js
 - Express
 - Postgres
